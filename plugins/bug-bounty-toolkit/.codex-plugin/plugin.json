@@ -1,0 +1,31 @@
+{
+  "name": "bug-bounty-toolkit",
+  "version": "0.1.0+codex.20260918035116",
+  "description": "Complete Codex-native workflow for authorized bug bounty, web application penetration testing, red-team assessment, validation, evidence, and reporting.",
+  "author": {
+    "name": "tan90yyb",
+    "url": "https://github.com/tan90yyb"
+  },
+  "homepage": "https://github.com/tan90yyb/bug-bounty-toolkit",
+  "repository": "https://github.com/tan90yyb/bug-bounty-toolkit",
+  "license": "MIT",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Bug Bounty Toolkit",
+    "shortDescription": "Authorized security testing from scope to report.",
+    "longDescription": "A complete security-testing suite for Codex covering engagement setup, scope control, reconnaissance, platform routing, vulnerability-specific testing, evidence hygiene, finding validation, and client-ready reporting.",
+    "developerName": "tan90yyb",
+    "category": "Security",
+    "websiteURL": "https://github.com/tan90yyb/bug-bounty-toolkit",
+    "capabilities": [
+      "Analysis",
+      "Local tools",
+      "Reporting"
+    ],
+    "defaultPrompt": [
+      "Start an authorized bug-bounty assessment and confirm scope before testing.",
+      "Analyze this Burp request and identify evidence-backed vulnerability checks.",
+      "Validate this finding and prepare a concise remediation report."
+    ]
+  }
+}

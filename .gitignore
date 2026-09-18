@@ -1,0 +1,26 @@
+# Local editor and operating-system files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Python and tooling caches
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+
+# Local security-test artifacts and secrets
+.env
+.env.*
+*.pem
+*.key
+*.p12
+*.pfx
+evidence/
+findings/
+targets/
+reports/private/
+*.har
+*.pcap
+*.pcapng

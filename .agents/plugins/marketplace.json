@@ -1,0 +1,20 @@
+{
+  "name": "bug-bounty-toolkit",
+  "interface": {
+    "displayName": "Bug Bounty Toolkit"
+  },
+  "plugins": [
+    {
+      "name": "bug-bounty-toolkit",
+      "source": {
+        "source": "local",
+        "path": "./plugins/bug-bounty-toolkit"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Security"
+    }
+  ]
+}
