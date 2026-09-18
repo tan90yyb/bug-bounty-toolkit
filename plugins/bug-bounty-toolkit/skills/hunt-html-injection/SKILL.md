@@ -6,6 +6,8 @@ metadata:
   report_count: 6
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 ## What is HTML Injection
 
 HTML Injection occurs when user input is inserted into a page's HTML without escaping, so injected tags are rendered by the browser as markup rather than displayed as literal text. Unlike XSS, the injected content does not require JavaScript execution — injecting `<b>`, `<h1>`, `<a>`, `<img>`, or `<form>` tags is sufficient.

@@ -5,6 +5,8 @@ metadata:
   sources: bugcrowd, community
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # BUGCROWD REPORTING — Program-Specific Tactics
 
 > Companion to the generic `report-writing` skill. Use when working specifically on Bugcrowd submissions where VRT mapping, OOS-clause rebuttals, or per-program target selection matter.

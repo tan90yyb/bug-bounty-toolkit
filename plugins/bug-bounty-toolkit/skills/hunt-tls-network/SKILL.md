@@ -6,6 +6,8 @@ metadata:
   sources: portswigger_research, ssl_labs_research, hstspreload_org
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # HUNT-TLS-NETWORK — TLS/SSL & DNS Security
 
 ## Reality Check (Read First)

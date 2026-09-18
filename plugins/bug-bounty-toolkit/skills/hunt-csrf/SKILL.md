@@ -6,6 +6,8 @@ metadata:
   report_count: 18
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 ## Shortcut: a raw HTTP client beats a real cross-origin page for header-check CSRF
 
 A raw HTTP client (curl, Burp Repeater, any scripting client) is not a browser: it will send

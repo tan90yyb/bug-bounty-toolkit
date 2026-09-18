@@ -6,6 +6,8 @@ metadata:
   sources: hackerone_public
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # HUNT-CORS — Cross-Origin Resource Sharing Misconfiguration
 
 ## What actually pays (and what does not)

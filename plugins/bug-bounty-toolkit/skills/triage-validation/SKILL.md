@@ -5,6 +5,8 @@ metadata:
   sources: community, operator_experience
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # TRIAGE & VALIDATION
 
 One wrong answer = STOP **this finding**. Kill **the finding**. Move on **to the next test class**.
@@ -84,10 +86,10 @@ Search:
 
 ### Q6: Can you prove impact beyond "technically possible"?
 
-- XSS → show actual cookie theft or session hijack, not just `alert(1)` or `alert(document.domain)`
-- SSRF → hit an internal endpoint that returns data, not just DNS ping
-- SQLi → show actual data exfil from a real table, not just error message
-- IDOR → show actual other-user's data in response, not just a 200 status code
+- XSS → use an authorized test account and a synthetic marker or harmless same-origin proof; never steal a real cookie or hijack a real session
+- SSRF → use an approved OAST callback or target-provided canary; never retrieve internal or cloud-metadata data
+- SQLi → use boolean/time-based behavior or a synthetic test row; never read a real production table
+- IDOR → compare two authorized test accounts containing synthetic data; never access an uninvolved user's record
 
 **If you can only show "technically possible" → DOWNGRADE severity, not kill.**
 

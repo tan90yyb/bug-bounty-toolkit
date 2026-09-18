@@ -5,6 +5,8 @@ metadata:
   sources: community, public_research
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # Bug Bounty Master Workflow
 
 Full pipeline: Recon -> Learn -> Hunt -> Validate -> Report. One skill for everything.
@@ -40,7 +42,7 @@ work, or an external blocker prevents further progress.
 | "Wrong implementation but no practical impact" | Wrong but harmless = not a bug |
 | Dead code with a bug in it | Not reachable = not a bug |
 | Source maps without secrets | No impact |
-| SSRF with DNS-only callback | Need data exfil or internal access |
+| SSRF with DNS-only callback | Need safe proof of controllable server-side fetch, reachability, or target-provided canary; never exfiltrate real/internal data |
 | Open redirect alone | Need ATO or OAuth chain |
 | "Could be used in a chain if..." | Build the chain first, THEN report |
 

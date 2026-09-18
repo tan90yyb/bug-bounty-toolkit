@@ -1,6 +1,6 @@
 {
   "name": "bug-bounty-toolkit",
-  "version": "0.1.0+codex.20260918035116",
+  "version": "0.1.0+codex.20260918101734",
   "description": "Complete Codex-native workflow for authorized bug bounty, web application penetration testing, red-team assessment, validation, evidence, and reporting.",
   "author": {
     "name": "tan90yyb",

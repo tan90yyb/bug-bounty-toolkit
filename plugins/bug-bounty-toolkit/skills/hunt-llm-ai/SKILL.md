@@ -6,6 +6,8 @@ metadata:
   report_count: 0
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 ## 11. LLM / AI FEATURES
 
 LLM bugs are only worth reporting when they cross a trust boundary you can **prove** — an OOB callback, a verbatim-reproducible secret, a cross-tenant record, or code execution. A model "saying something bad once" is confabulation, not a vulnerability. Read the False-Positive Gate before claiming anything.

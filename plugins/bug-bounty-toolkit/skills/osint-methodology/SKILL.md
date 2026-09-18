@@ -6,6 +6,8 @@ metadata:
   version: 2.3
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # OSINT Methodology — External Red-Team Edition
 
 ## 0. When to use this skill / When NOT

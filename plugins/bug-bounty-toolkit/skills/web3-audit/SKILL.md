@@ -5,6 +5,8 @@ metadata:
   sources: public_research, community
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # WEB3 SMART CONTRACT AUDIT
 
 10 bug classes. Pre-dive kill signals. Foundry PoC template. Real paid examples.

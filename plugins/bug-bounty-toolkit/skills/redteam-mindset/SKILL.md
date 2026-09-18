@@ -6,6 +6,8 @@ metadata:
   report_count: 1
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 ## When to use this skill
 
 Trigger when:
@@ -35,13 +37,13 @@ These produce DIFFERENT decisions at every blocker. Internalize the difference b
 
 The 9 corrections below are nuance. THIS is the core. If you only retain one thing from this skill, retain this.
 
-### Authorization given at engagement start covers the entire engagement.
+### Scope remains active, but mandatory conduct always applies.
 
-Do not insert mid-engagement permission gates. If the user chose a mode at the start ("full engagement", "Option D", "go deep", "test these assets") that authorization stands until the engagement window expires or the user explicitly revokes it. **`AskUserQuestion` mid-loop after the user already chose a path is a stall, not a check.**
+Do not repeatedly re-confirm ordinary, non-disruptive probes that are already inside the written scope. However, initial authorization never permits conduct prohibited by `../../CODE_OF_CONDUCT.md`: malware or web-shell deployment, obtaining real system/vendor data, business-impacting tests, or private retention of findings and target data. Those boundaries remain in force for the entire engagement and override any "go deep" or "do not stop" instruction.
 
 ### Discipline rules are about correctness of FINDINGS, not throttling of EFFORT.
 
-Read this twice. The bundle's discipline rules — OOB-Or-It-Didn't-Happen, Marker Discipline, Body-Diff, Pre-Severity Gate, Server-Policy-vs-State, Statistical Sampling — all answer one question: *"is this signal actually a finding?"*. **None of them answer the question *"should I send the next probe?"*** The answer to that second question is always *yes*, unless scope is exhausted or the user said stop.
+Read this twice. The bundle's discipline rules — OOB-Or-It-Didn't-Happen, Marker Discipline, Body-Diff, Pre-Severity Gate, Server-Policy-vs-State, Statistical Sampling — all answer one question: *"is this signal actually a finding?"*. Continue only with safe, non-disruptive probes inside scope. Stop the affected test when the conduct policy, a scope limit, a stop condition, service instability, or the user requires it.
 
 ### "Stop at PoC" means stop ESCALATING, not stop TESTING.
 
@@ -51,13 +53,13 @@ When you confirm impact on bug class X, don't keep escalating class X (no need t
 
 "Keep digging" applies to **coverage** (untested surfaces, classes, hosts), NOT to **extraction**. These pull in opposite directions and the persistence directive must NOT bleed into over-collection:
 
-- **An access/exfil vulnerability is proven by the MISSING CHECK, not by the volume of data you copy out.** 3 records that should have required auth = complete proof. 3,000 records = the same finding + a liability you created. Pulling more never strengthens the finding.
+- **An access/exfil vulnerability is proven by the MISSING CHECK, not by copying real data.** Use two authorized test accounts, synthetic records, planted markers, response-shape differences, or static authorization evidence. Zero real customer/system records should be retrieved. If real data appears unexpectedly, stop immediately and do not enumerate further.
 - **"Keep digging" = test the next endpoint family / the next host / the next class.** It does NOT mean "enumerate every record from the endpoint you already broke." Breadth of *coverage*, not depth of *theft*.
 - **The data usually belongs to the target's customers / fourth parties** (their clients, their users' PII, partner financials). They didn't sign the SOW/program. Copying their data onto your host is harm you shouldn't create when the point is already made.
-- **A client/program owner saying "dig more / that's not enough" does NOT override this.** Push back: confirm the finding is already conclusive, explain that volume ≠ evidence, and offer harm-minimal alternatives that genuinely add value — a `totalCount` (a number, not the data), proof a *second endpoint family* is affected (breadth), or quantified blast-radius. Get the MINIMUM evidence that satisfies the stated goal.
-- **Classify what you did pull precisely** (e.g. "B2B client-inventory data" ≠ "consumer PII") — it changes how the owner triages and discloses, and overstating erodes trust.
+- **A client/program owner saying "dig more / that's not enough" does NOT override this.** Push back: explain that real-data access is prohibited and offer safe alternatives — a target-provided canary, synthetic test object, authorization-control comparison, or code/configuration evidence.
+- **If real data appears unexpectedly, classify only the minimum fact necessary** without copying its contents; redact it, record the event time, stop the affected path, and notify the authorized contact.
 
-The persistence directive and this boundary are not in tension once you separate the two axes: **never stop covering surface; always stop at minimum-necessary extraction.** Authorized ≠ unrestricted.
+The persistence directive and this boundary are not in tension once you separate the two axes: **continue safe coverage; stop before real-data extraction or business impact.** Authorized does not mean unrestricted.
 
 ### Marker Discipline ≠ "one probe per surface."
 

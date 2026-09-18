@@ -5,6 +5,8 @@ metadata:
   sources: community, operator_experience
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # REPORT WRITING
 
 Impact-first. Human tone. No theoretical language. Triagers are people.

@@ -6,6 +6,8 @@ metadata:
   report_count: 87
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 ## Autonomous Testing Priority
 
 **Content-type is the #1 silent failure mode for command injection.**
@@ -439,11 +441,11 @@ RCE in 2020-2026 rarely arrives at a single sink. Every modern RCE is composed o
 - **Impact:** RCE as the database user, which on managed Postgres frequently has IAM credentials and direct access to other AWS resources.
 - **Real shape:** Multiple H1 disclosures 2020-2024 across SaaS apps backed by Postgres. Cross-refs `hunt-sqli` Disclosed Report Citation #12 and root cause discussion of `FILE`/`xp_cmdshell` privileges.
 
-### Chain 3 — Image Upload + Path Traversal in Filename + Misconfigured MIME Serving → Webshell
+### Chain 3 — Image Upload + Path Traversal + Misconfigured MIME Serving (threat model only)
 
 - **A.** File upload accepts images (`image/png`, `image/jpeg`). The server saves with the user-supplied filename or only validates Content-Type, not actual content.
-- **B.** Upload a `.aspx`/`.jsp`/`.php` file with the correct image magic-bytes (`GIF89a` + PHP after) and a filename containing `../` to write outside the upload directory into the web-root (`../../../public/webshell.php`).
-- **C.** Request `https://target/webshell.php?cmd=id` — server's PHP/ASP.NET handler runs the script regardless of extension policy because the path doesn't pass through the upload-dir filter.
+- **B. Risk condition:** an attacker could combine executable server-side content with a traversal filename to escape the upload directory and reach the web root.
+- **C. Safe validation:** never upload or execute a web shell. Use a harmless non-executable marker in an isolated owner-controlled test path, or rely on code/configuration evidence showing traversal plus executable-handler reachability. Record the executable path as unexecuted impact.
 - **Impact:** Unauthenticated or low-priv attacker gets webshell on the application server with the web-server's process privileges.
 - **Real shape:** Multiple disclosed H1 cases on legacy upload handlers; canonical pre-2020 RCE class. Pairs with `hunt-file-upload` (upload bypass table) and `hunt-misc` path-traversal patterns.
 

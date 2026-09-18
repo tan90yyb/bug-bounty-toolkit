@@ -6,6 +6,8 @@ metadata:
   report_count: 11
 ---
 
+> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+
 # HUNT-WEBSOCKET — WebSocket Security
 
 ## Crown Jewel Targets
@@ -271,7 +273,7 @@ brew install websocat                # alt client; supports text/binary + autore
 
 ## Validation (mandatory before reporting)
 
-- ✅ **CSWSH:** attacker-origin PoC HTML, opened with a *different* victim account logged in, must **receive that victim's data** (verified by a unique planted marker / distinct PII) and exfil it to **Collaborator/OAST**. A bare `101` from a foreign Origin is NOT a finding.
+- ✅ **CSWSH:** use two authorized test accounts and a unique synthetic marker. Confirm only that the marker reaches the attacker-controlled test client; never receive, copy, or forward a real user's data or PII. A bare `101` from a foreign Origin is not sufficient, but real-data exfiltration is prohibited.
 - ✅ **No per-message auth:** privileged frame produces a **verifiable server-side effect** (state change confirmed via a second channel / REST API), not merely "accepted".
 - ✅ **Message tampering:** tampered value **persists server-side** (confirmed via order/balance API), not just echoed in the UI.
 - ✅ **Namespace/room bypass:** received **`42` event frames with another user's data**, not just a `40` namespace ack.
