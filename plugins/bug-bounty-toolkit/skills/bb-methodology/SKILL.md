@@ -20,6 +20,10 @@ and reporting for confirmed findings plus explicit coverage gaps.
 
 ---
 
+## 网站价值与时间安排（选站和切换方向前必读）
+
+读取[网站价值分类与时间安排](../bug-bounty/references/value-and-time.md)。沿用每站 Tier 0–3/unknown、分级理由、研究模式、实际计时和延长状态。用户的阶段时间规则决定研究安排；本文件中的路由提示使用同一规则。
+
 ## PART 0: MODE CONFIRMATION (Before Anything Else)
 
 **Confirm the engagement type before deciding what counts as a finding.** The same target produces a different report shape depending on which mode applies. Getting this wrong is the single biggest waste of time in this workflow — answer it explicitly before Phase 0.
@@ -125,9 +129,9 @@ Before touching any tool:
 
 ### Anti-Patterns (Stop Doing These)
 
-- **Program hopping**: Stick with one target minimum 2 weeks / 30 hours
+- **Program hopping**: Follow the agreed site queue, value tiers and coverage plan; record evidence or a reason before rotating. Apply the shared phase budgets to each research direction.
 - **Tool-only hunting**: Automation finds duplicates. Manual testing finds unique bugs.
-- **Rabbit hole**: Max 45 min per parameter. Set a timer. If stuck, sleep on it.
+- **Rabbit hole**: Review after 20 minutes without progress; declared deep work has a 30-45 minute plan and one extension application. Retain the same lead timer across parameter changes.
 - **No goal**: "Just looking around" = wasted time. Always Define first.
 
 ---
@@ -174,28 +178,23 @@ Before touching any tool:
 | Scope update (new domain added) | X | |
 | Found interesting subdomain | | X |
 
-### Phase 1: RECON
+### Phase 1: RECON — 信息收集
 
-**Goal**: Maximize attack surface. Find what others missed.
+Follow the [shared ARL-first information-collection workflow](../web2-recon/SKILL.md).
+ARL provides the primary asset inventory; Toolkit supplements source gaps and performs
+per-site page, API, JS, historical-URL, and business analysis. Import completed ARL tasks
+through `arl-results`, preserve provenance, deduplicate, and verify ownership and online evidence.
 
-**Wide approach** (initial sweep):
-```
-Subdomain enum -> DNS resolution -> HTTP probing -> Port scan -> Tech detect
-```
+Create the canonical `RECON_DIR` inventory, pending list, origin list (`live-sites.txt`),
+hostname list (`live-hosts.txt`), site queue, and progress log before dispatch. Process selected
+in-scope sub-sites individually by business type and priority. Time boxes change depth/order;
+every deferred, blocked, or failed site remains visible with a reason and next action.
+Missing exports must be repaired instead of silently falling back to the starting domain.
 
-**Deep approach** (targeted):
-```
-Google Dorks -> JS file download -> Hidden param discovery -> API mapping
-```
-
-| What you find | Next action |
-|--------------|-------------|
-| Live subdomains with tech stack | Phase 2 (Mapping) |
-| Known software (WordPress, Jira) | Check CVEs + defaults immediately |
-| Cloud resources (S3, Firebase) | Test permissions (read/write/list) |
-| Nothing after 5 min on a host | Skip, try next host (5-minute rule) |
-
-**Command**: `/recon target.com`
+Wide collection builds the inventory; deep collection maps each site's business and interfaces.
+Existing company/ICP scope rules apply. A collection-only request ends with coverage and the
+next-step plan; discovered technologies and cloud resources are leads for that plan, not a
+trigger to start vulnerability checks or permission tests automatically.
 
 ### Phase 2: MAPPING & ANALYSIS
 
@@ -258,8 +257,8 @@ What input are you testing?
 | Low-impact behavior (redirect, self-XSS, cookie injection) | Chain it -- find a connector gadget |
 | Confirmed vuln (XSS, IDOR, SQLi) | Phase 4 (Prove and Escalate) |
 | Blocked by WAF/CSP/403 | Bypass techniques, then retry |
-| Known software vuln (CVE) | 1-day speed workflow |
-| Nothing after 20 min on this endpoint | Rotate (20-minute rule) |
+| Known software vuln (CVE) | Select permitted validation by evidence and apply the shared exploration/deep budgets |
+| No meaningful progress for 20 min on this direction | Record a review; rotate or explain continuation under the shared policy |
 
 ### Phase 4: PROVE & ESCALATE
 
@@ -304,8 +303,8 @@ What did you find?
 
 **Pre-report gate:**
 ```
-Run /validate (7-Question Gate)
-+-- All 7 pass? -> Write report
+Run /validate (8-Question Gate)
++-- All 8 pass? -> Write report
 +-- Any fail? -> KILL the finding. Don't waste time.
 +-- Borderline? -> Run /triage for quick go/no-go
 ```
@@ -349,19 +348,16 @@ Run /report
 |----------------------|----------|
 | Can't find any subdomains | Phase 1: Try different recon sources, Google Dorks |
 | Found subdomain but don't know what to test | Phase 2: Map the app, download JS, understand auth |
-| Testing but nothing works | Phase 3: Switch vuln class (20-min rotation rule) |
+| Testing but nothing works | Phase 3: Review after 20 min without progress; choose the next evidence-based direction |
 | Found a bug but impact is low | Phase 4: Escalation paths or gadget chaining |
 | WAF/CSP/403 blocking my payload | Bypass techniques, then return to current phase |
-| Been stuck for 45 min on one param | STOP. Rabbit hole. Move to next endpoint. |
+| Deep time box reached (at most 45 min) | Record closure or apply once for a specific approved extension; preserve the lead timer |
 | New API endpoint discovered during testing | Return to Phase 2: map it before attacking |
-| Found one bug | A->B signal: same dev made more mistakes. Hunt 20 min for siblings. |
+| Found one bug | A->B signal: assess related leads by value and apply the shared exploration/deep budgets |
 
-### 20-Minute Rotation Clock
+### 20 分钟无进展复盘与深挖计时
 
-Every 20 minutes ask yourself: **"Am I making progress?"**
-- Yes -> Continue
-- No -> Rotate to next: endpoint -> subdomain -> vuln class -> target
-- Been on same target 2+ weeks with no findings? -> Consider switching program
+按[共同规则](../bug-bounty/references/value-and-time.md)读取实际时间和逐站进度：连续 20 分钟无有效进展时，记录证据、卡点和下一步，考虑换接口、业务方向或站点；有具体理由继续时记录预计投入与下一检查点。高价值线索立即评估深挖，声明 30～45 分钟计划，到期收束或申请一次具体时长的延长。恢复同一线索沿用累计时间，换方向保留尚未完成的覆盖项。
 
 ### Pushback Protocol (When the User Says "Find More")
 
@@ -470,7 +466,7 @@ For any iteration that runs more than 5 times, **use Python (with try/except per
 
 - **`hunt-dispatch`** — When PART 0 mode is confirmed (redteam / wapt + blackbox|greybox). Workflow primitive: after the engagement-type answer is locked, hand off to `hunt-dispatch` to fingerprint the target and load the matching platform + hunt-* skill set; this skill stops being the active context once dispatch prints its taxonomy.
 - **`bug-bounty`** — When the user asks a generic "what should I do" or starts a new target. Workflow primitive: `bug-bounty` is the orchestrator that names which `hunt-*` skills to load by topic; this skill (`bb-methodology`) provides the 5-phase workflow that orchestrator runs against.
-- **`triage-validation`** — When a finding completes Phase 4 and is about to be written up. Workflow primitive: Phase 5 explicitly calls `/validate` (the 7-Question Gate); only findings that pass all 7 questions get handed off to `report-writing`.
+- **`triage-validation`** — When a finding completes Phase 4 and is about to be written up. Workflow primitive: Phase 5 explicitly calls `/validate` (the 8-Question Gate); only findings that pass all 8 questions get handed off to `report-writing`.
 - **`offensive-osint`** + **`web2-recon`** — When Phase 1 (Recon) is active. Workflow primitive: Phase 1's "Wide approach" delegates to `offensive-osint` for asset arsenal and `web2-recon` for the live-host + URL pipeline.
 
 ---
@@ -513,7 +509,7 @@ If you find yourself spending 50% of a SaaS bug-bounty engagement in recon, you'
 
 If you find a Critical in the first 30 minutes of recon, **stop reconning, validate the Critical fully, report it, then return to recon.** The methodology says "complete the phase before moving on" — the value-per-hour curve disagrees. A confirmed Critical paying out within 24h of engagement start is worth more than a comprehensive asset list you'll never get to chain.
 
-The same applies in reverse: if you've been hunting a candidate for 4+ hours and it won't reproduce on a second account, the candidate is dead. Don't sink another 4 hours into making a dead candidate reproduce. Drop it, document the retraction in your notes, move on.
+When a candidate fails to reproduce, record the evidence gap at the 20-minute review or deep-work deadline. Choose a concrete next step within the shared budget, or retain the candidate as unresolved and rotate; a timing deadline alone does not prove the candidate false.
 
 ### The discipline rules are non-negotiable
 

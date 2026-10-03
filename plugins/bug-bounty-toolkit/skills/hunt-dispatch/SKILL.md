@@ -17,8 +17,8 @@ skill-set loader for the `bug-bounty` orchestrator. one concept (which skills to
 every skill loaded below operates under one frame, and it holds for the whole session:
 
 - **authorized and scope-bounded.** the operator established authorization for the named scope
-  before active testing. testing stays inside it. an out-of-scope host ends the run — it does not
-  widen it.
+  before active testing. testing stays inside it. record an out-of-scope host as pending or
+  excluded without probing it, then continue the eligible entries in the site queue.
 - **the output is a finding, not an exploit.** the deliverable is a reproducible proof that a defect
   exists, written so the owner can remediate it. enough to demonstrate impact; no further.
 - **remediation is the point.** these skills exist so defects get fixed by the people who own them.
@@ -34,10 +34,39 @@ hunt-dispatch mode=wapt box=blackbox
 hunt-dispatch mode=wapt box=greybox
 ```
 
+## recon handoff (ALL modes, before step 0)
+
+Load the [shared information-collection contract](../web2-recon/SKILL.md) and the current
+`site-queue.csv`. This router runs only when the requested task includes testing; a
+collection-only task is delivered before dispatch. Use the producer's exact `RECON_DIR`.
+
+`live-sites.txt` contains one validated, in-scope HTTP(S) origin per line, including scheme
+and any non-default port. `live-hosts.txt` contains bare hostnames for tools that need them.
+Check the list's scope, observation time, format, and queue correspondence before requests.
+Repair missing/invalid exports; if no eligible origins exist, report the queue's reasons and
+continue other permitted collection work. Never silently substitute `$TARGET` for a missing list.
+
+Before selecting or resuming a site, read the [shared value/time policy](../bug-bounty/references/value-and-time.md). Carry its provisional value tier and evidence reason, current mode, lead ID, actual elapsed time, last progress and extension status forward from the queue. Prioritize eligible Tier 0/1 leads; keep unknown sites for classification. Declare deep work before entering its 30-45 minute time box; preserve the same lead timer on resume and follow the one-extension approval process at the deadline. Record every rotation and remaining coverage item.
+
+Platform skill loading tiers later in this file rank context-loading precedence. Website value Tier 0–3 and research timing follow the shared policy above, including when a routed `hunt-*` skill contains different generic timing advice.
+
+The shell examples below assume Bash and the established absolute `RECON_DIR`:
+
+```bash
+LIVE_SITES="$RECON_DIR/live-sites.txt"
+if [ ! -s "$LIVE_SITES" ]; then
+  printf '%s\n' 'No live-site handoff: review inventory and queue before dispatch.' >&2
+  exit 1
+fi
+```
+
+Keep each sub-site's business type, evidence, result, and next action linked to its own queue
+entry. A failure or pause on one origin does not mark the remaining origins complete.
+
 ## step 0 — 404 baseline (ALL modes, mandatory, before any enumeration)
 
-run this for **every** host before probing a single path. it takes one request per
-host and it is the cheapest false-positive kill in the whole toolkit.
+run this for **every** host before probing a single path. the example takes two requests per
+origin and it is the cheapest false-positive kill in the whole toolkit.
 
 many modern estates (SPA / Next.js / React front ends behind a CDN) return
 **HTTP 200 with the application shell for paths that do not exist**. a status code
@@ -46,14 +75,20 @@ therefore proves nothing. without a recorded control, `/.well-known/security.txt
 all "exist" on a host where none of them do.
 
 ```bash
-for H in $HOSTS; do
-  # two independent bogus paths — if they agree, that IS the soft-404 signature
+BASELINE_BODY=$(mktemp)
+while IFS= read -r SITE; do
+  SITE=${SITE%$'\r'}
+  [ -n "$SITE" ] || continue
   for P in /zzz-nope-12345 /qqq-other-98765; do
-    printf "%-34s %-20s " "$H" "$P"
-    curl -sk -m 12 -o /tmp/b -w "%{http_code} %{size_download} " "https://$H$P"
-    shasum /tmp/b | cut -c1-12
+    printf "%-34s %-20s " "$SITE" "$P"
+    if curl -sS -m 12 -o "$BASELINE_BODY" -w "%{http_code} %{size_download} " "${SITE%/}$P"; then
+      shasum "$BASELINE_BODY" | cut -c1-12
+    else
+      printf '%s\n' 'request failed; record the error for this origin'
+    fi
   done
-done
+done < "$LIVE_SITES"
+rm -f "$BASELINE_BODY"
 ```
 
 record per host: **status, byte length, body hash**. that triple is the control.
@@ -77,31 +112,30 @@ behaviour and move on.
 fingerprint **every** live host, not just the apex. for multi-host / wildcard
 targets the platform-skill routing must be driven by all banners, not one host's.
 
-use `-L` (follow redirects) — identity-provider and CDN signals
-(`login.microsoftonline.com`, `okta`, `auth0`, CDN banners) routinely sit
-behind a 30x, so a no-redirect `curl -sI` silently misses those matches. pull
-both headers and the landing-page HTML (`__NEXT_DATA__`, `VIEWSTATE`,
-`laravel_session`, `Ignition`, framework markers live in the body, not headers).
+Inspect redirect Location headers and follow only destinations already covered by the
+confirmed scope; record unknown destinations for ownership triage first. Collect headers and
+HTML for each eligible origin. Redirects and body-only framework markers can affect routing.
+The example reads the initial response; allowed follow-up hops are recorded separately.
 
 ```bash
-HOSTS="$TARGET"
-if [ -f "recon/$TARGET/live-hosts.txt" ]; then
-  HOSTS=$(cat "recon/$TARGET/live-hosts.txt")
-fi
-for H in $HOSTS; do
-  echo "=== $H ==="
-  # -L follow redirects, -D - dump headers, -o body; cap body to keep context small
-  curl -sSL -m 12 -D - -o /tmp/fp_body "https://$H" 2>/dev/null | tr -d '\r'
-  # surface body-only platform markers
-  grep -aoE '__NEXT_DATA__|/_next/|VIEWSTATE|rO0[AB]|laravel_session|Ignition|Telescope|Whitelabel|/actuator|application/grpc|socket\.io|swagger|\.js\.map' \
-    /tmp/fp_body | sort -u
-done
-rm -f /tmp/fp_body
+FP_BODY=$(mktemp)
+while IFS= read -r SITE; do
+  SITE=${SITE%$'\r'}
+  [ -n "$SITE" ] || continue
+  printf '=== %s ===\n' "$SITE"
+  if curl -sS -m 12 -D - -o "$FP_BODY" "$SITE"; then
+    grep -aoE '__NEXT_DATA__|/_next/|VIEWSTATE|rO0[AB]|laravel_session|Ignition|Telescope|Whitelabel|/actuator|application/grpc|socket\.io|swagger|\.js\.map' \
+      "$FP_BODY" | sort -u
+  else
+    printf '%s\n' 'fingerprint request failed; record error and continue the queue' >&2
+  fi
+done < "$LIVE_SITES"
+rm -f "$FP_BODY"
 ```
 
-if `live-hosts.txt` is absent, the loop still runs once against `$TARGET`. record
-which signal came from which host — a platform skill matched on host B does not
-imply host A runs that stack.
+Record which signal came from which origin and update its queue entry. A platform skill
+matched on site B does not imply site A runs that stack. Scheme and port come from the
+origin list, so an HTTP site or non-default port is not silently converted to HTTPS/443.
 
 look for the following signals → platform skill mapping:
 
@@ -336,8 +370,10 @@ implicitly. every subagent prompt must carry:
 1. **the authorized host list, verbatim, as data.** not "the target estate", not
    "*.target.com" — the explicit list. a subagent cannot infer the boundary.
 2. **the discovered-host rule:** hosts found mid-run (via CT logs, CSP headers,
-   JS bundles, CNAME chains, error messages) are **report-only**. resolve DNS,
-   record, hand back. never probe, never write, until the operator re-authorizes.
+   JS bundles, CNAME chains, error messages) are reported to the parent first.
+   The parent checks ICP filing: a registrant belonging to the user-named company
+   enters scope and is sent back as an updated explicit host list. Other-company
+   or unconfirmed hosts stay pending. A subagent never expands its own host list.
 3. **a deny-list of action-executing endpoints, applied BEFORE any allow-list.**
    deny by verb-in-name first: `refund`, `settle`, `payout`, `transfer`, `adjust`,
    `disburse`, `create`, `update`, `delete`, `rotate`, `reset`, `send`, `initiate`,
@@ -354,8 +390,8 @@ implicitly. every subagent prompt must carry:
 validation error, and (b) wrote an object to a cloud bucket that was never on the
 authorized list — one the parent prompt had named only for a DNS check. both were
 disclosed in the deliverable. the fix is structural: pass scope as data, deny
-by verb before allowing by verb, and treat every discovered host as out of scope
-until told otherwise.
+by verb before allowing by verb, and wait for the parent to verify filing and
+update the explicit host list before testing a discovered host.
 
 ## step 4 — return control to the bug-bounty orchestrator
 
@@ -374,6 +410,6 @@ never echo back, log, or persist:
 
 - **`bb-methodology`** — When PART 0 mode confirmation completes. Workflow primitive: `bb-methodology` confirms engagement type (red team vs WAPT vs bug bounty); the answer feeds directly into this skill's `mode=redteam` / `mode=wapt` invocation.
 - **`redteam-mindset`** + **`mid-engagement-ir-detection`** — When `mode=redteam` is loaded. Workflow primitive: these are the always-on skills loaded first by step 2 of the redteam flow before any platform skill or hunt-* skill.
-- **`okta-attack`** / **`m365-entra-attack`** / **`enterprise-vpn-attack`** / **`vmware-vcenter-attack`** / **`cloud-iam-deep`** / **`supply-chain-attack-recon`** / **`apk-redteam-pipeline`** — When fingerprint signals match. Workflow primitive: step 1's curl fingerprint scan against `recon/<target>/live-hosts.txt` maps banner / domain signals to one or more of these platform skills.
+- **`okta-attack`** / **`m365-entra-attack`** / **`enterprise-vpn-attack`** / **`vmware-vcenter-attack`** / **`cloud-iam-deep`** / **`supply-chain-attack-recon`** / **`apk-redteam-pipeline`** — When fingerprint signals match. Workflow primitive: step 1's curl fingerprint scan against `RECON_DIR/live-sites.txt` maps banner / domain signals to one or more of these platform skills.
 - **`hunt-rce`** / **`hunt-sqli`** / **`hunt-ssrf`** / **`hunt-ato`** / **all other hunt-* skills`** — When the mode-specific skill set is being printed. Workflow primitive: this skill is the loader; it names the hunt-* skills but does not run probes — actual hunting happens after step 4 returns control to `bug-bounty`.
 - **`report-writing`** vs **`redteam-report-template`** — When the taxonomy print specifies the report format. Workflow primitive: `mode=wapt` ends with `report-writing` as the deliverable format; `mode=redteam` ends with `redteam-report-template` instead.

@@ -37,9 +37,11 @@ These produce DIFFERENT decisions at every blocker. Internalize the difference b
 
 The 9 corrections below are nuance. THIS is the core. If you only retain one thing from this skill, retain this.
 
-### Scope remains active, but mandatory conduct always applies.
+### 范围、研究预算和行为准则持续适用
 
-Do not repeatedly re-confirm ordinary, non-disruptive probes that are already inside the written scope. However, initial authorization never permits conduct prohibited by `../../CODE_OF_CONDUCT.md`: malware or web-shell deployment, obtaining real system/vendor data, business-impacting tests, or private retention of findings and target data. Those boundaries remain in force for the entire engagement and override any "go deep" or "do not stop" instruction.
+读取[共同价值与时间规则](../bug-bounty/references/value-and-time.md)。有必要深挖且时间不足时主动在聊天中申请加时；完整覆盖要求不能绕过已批准的时间盒。
+
+Do not repeatedly re-confirm ordinary, non-disruptive probes that are already inside the written scope. However, initial authorization never permits conduct prohibited by `../../CODE_OF_CONDUCT.md`: malware or web-shell deployment, reading beyond the shared five-record validation allowance, business-impacting tests, or private retention of findings and target data. Those boundaries remain in force for the entire engagement and override any "go deep" or "do not stop" instruction.
 
 ### Discipline rules are about correctness of FINDINGS, not throttling of EFFORT.
 
@@ -49,53 +51,13 @@ Read this twice. The bundle's discipline rules — OOB-Or-It-Didn't-Happen, Mark
 
 When you confirm impact on bug class X, don't keep escalating class X (no need to pivot from `id=1` IDOR to dumping the whole user table). But classes Y and Z have not been tested yet. Run Y. Then Z. Then the rest of the Pattern Library.
 
-### The data-minimization boundary is AS LOUD as "DO NOT STOP". Read this twice.
+### 真实信息最小验证：同一漏洞累计最多 5 条
 
-"Keep digging" applies to **coverage** (untested surfaces, classes, hosts), NOT to **extraction**. These pull in opposite directions and the persistence directive must NOT bleed into over-collection:
+所有取证统一遵循[行为准则](../../CODE_OF_CONDUCT.md)。优先测试账号、自有数据和合成标记；为证明同一漏洞确有必要时，允许在授权范围内累计最多获取 5 条真实信息。取得足够证据后停止读取，不为凑满数量继续访问。
 
-- **An access/exfil vulnerability is proven by the MISSING CHECK, not by copying real data.** Use two authorized test accounts, synthetic records, planted markers, response-shape differences, or static authorization evidence. Zero real customer/system records should be retrieved. If real data appears unexpectedly, stop immediately and do not enumerate further.
-- **"Keep digging" = test the next endpoint family / the next host / the next class.** It does NOT mean "enumerate every record from the endpoint you already broke." Breadth of *coverage*, not depth of *theft*.
-- **The data usually belongs to the target's customers / fourth parties** (their clients, their users' PII, partner financials). They didn't sign the SOW/program. Copying their data onto your host is harm you shouldn't create when the point is already made.
-- **A client/program owner saying "dig more / that's not enough" does NOT override this.** Push back: explain that real-data access is prohibited and offer safe alternatives — a target-provided canary, synthetic test object, authorization-control comparison, or code/configuration evidence.
-- **If real data appears unexpectedly, classify only the minimum fact necessary** without copying its contents; redact it, record the event time, stop the affected path, and notify the authorized contact.
+跨接口、账号、工具和重试共用同一上限，重复返回也计入获取条次。记录 finding_id、累计数量与证据位置；禁止批量枚举、导出和以密码、密钥、令牌作为读取样本。意外返回的记录计入上限；出现超量返回时停止该读取路径并如实记录，不继续扩展。
 
-The persistence directive and this boundary are not in tension once you separate the two axes: **continue safe coverage; stop before real-data extraction or business impact.** Authorized does not mean unrestricted.
-
-### Marker Discipline ≠ "one probe per surface."
-
-Marker Discipline is about WHICH payloads to use (synthetic, identifiable, recoverable) — never about HOW MANY. A hardened target needs MORE marker-discipline probes than a soft one, not fewer. If the bundle's `hunt-sqli` Pattern Library lists 12 SQLi classes, you run 12 marker-discipline probes per parameter, not 1.
-
-### Self-throttling anti-patterns — flag immediately if you catch yourself doing any of these
-
-These all came out of a real engagement (authorized-engagement revalidation, 2026-05-17) where this skill *existed* and was *loaded* and the operator still self-throttled. The lesson is to make the failure modes explicit:
-
-1. **Asking "want me to continue?" mid-run** after the user already chose Option D / full engagement / "go deep". The answer they gave at start IS the answer.
-2. **Stopping at first-class-returning-401/403.** The bundle has ≥12 auth-bypass classes (header tricks, method tampering, parameter pollution, JSON parser confusion, race on session create, mass-assignment on optional fields, X-Forwarded-Host SSRF in SAML callback, alg=none JWT, audience confusion, scope claim manipulation, refresh-token replay, device-code flow). Run them all per surface.
-3. **"Interesting constant token, not chased."** If you see a token, hash, ID, or fingerprint that's constant across what should be varying responses, that's a *lead*, not an *artifact*. `GET` it. Decode it. Pass it back. A `view.php?view=<constant-md5>` redirect is a session/auth/error-key signal, not noise.
-4. **Reading robots.txt for cross-template signals and NOT READING the Disallow lines.** A 469-line robots.txt is a developer-curated map of every path they don't want public. Every Disallow line is a probe target.
-5. **Treating soft-404 as "noted."** A 37 KB body inside a 404 status is leaking the home page or worse. Read it. Grep it. Diff it against the home page.
-6. **"OpenAPI exposed → finding logged"** with only 4 of N endpoints probed. Every endpoint × every relevant test class. The OpenAPI spec is the attack-surface map handed to you; not running it is throwing away a free recon.
-7. **"APK retest deferred — needs tooling."** `brew install jadx`, apkpure direct download, `apk-redteam-pipeline` already documents the flow. Five minutes of setup, not "another session."
-8. **Volume framed as a problem.** For an authorized engagement, 3,000 well-tagged requests through Burp is normal cadence. Bug-bounty hunters at full pace exceed that per *hour*. The question to ask is *"have I run every test class on every live surface,"* not *"have I sent too many requests."*
-9. **Inserting `AskUserQuestion` at any decision point inside an active engagement loop.** If the user picked a mode at start, that mode is in effect until revoked. Choosing operationally between e.g. SAML acs raw POST vs SAML acs replay is a *technical* decision the operator can make and document — it does not require user pre-approval.
-10. **Skill-gap-as-stop-condition.** "No `hunt-zoho` skill exists, so I logged a v1.1 gap and moved on." NO. If a hunt-* skill doesn't exist for a discovered tech stack, do the same work *manually* using the vendor's public check matrix. Log the gap in v1.1 roadmap *and* run the checks now.
-
-### Real-engagement cadence — what a complete sweep per live host actually looks like
-
-Per live host, before declaring the host complete:
-
-- Top-100 path probe (admin, api, login, /.git, /.env, server-status, swagger, openapi.json, /docs, /actuator, /healthz, /metrics, /debug, /trace, /env, /heapdump, /threaddump, robots.txt, sitemap.xml, /.well-known/*, common-CMS-paths per fingerprint)
-- robots.txt content **read** — every Disallow becomes a probe target
-- sitemap.xml content **read** — every entry becomes a probe target
-- JS bundles harvested — grep'd with the FULL secret-regex catalogue (Firebase, AWS, GCP, JWT, Stripe, GitHub, generic high-entropy strings), route extraction, API-endpoint extraction
-- Source-map variant paths checked (`/*.js.map`, `/static/js/*.js.map`, `/_next/static/*.js.map`, `/build/*.js.map`)
-- For every form discovered: full SQLi marker-discipline sweep (12+ classes), auth-bypass class sweep (12+ classes), CSRF, parameter pollution, mass-assignment, race condition on state-changing submission
-- For every API endpoint discovered (from JS, OpenAPI, swagger, network capture): HTTP method tampering, content-type tampering, JWT alg=none, alg=HS256-with-RS256-key, audience confusion, prototype pollution, race conditions on idempotency-violating ops
-- For every SaaS tenant identified: vendor-specific check matrix from the vendor's known-vuln catalogue — even when no dedicated hunt-* skill exists yet
-- Identity fabric: GetUserRealm, OpenID well-known, autodiscover-v2, federation behavior testing, sister-brand-TLD pivot for shared tenant, OneDrive-based user enum (no lockout risk)
-- Mobile apps: pull every APK in the developer's catalogue, jadx decompile, secret + endpoint + cert-pin grep, exported-component enum
-
-**If you've done less than this per host, you have not finished the host. The engagement is not done until every host is finished.**
+请求、响应和截图允许脱敏，保留验证权限关系、字段结构及结果差异所需的信息。未证明影响的线索按价值与时间规则继续研究；需要加时就在聊天中申请，用户批准后继续。
 
 ---
 
@@ -227,9 +189,9 @@ Decision-tree for blockers:
 3. Error-based extraction
 4. OOB DNS callback (interactsh)
 5. Faster network (cloud VM in same region as target)
-6. Run dumper unattended overnight; deliver partial results
+6. If worthwhile validation needs more time, request a specific extension in chat; resume after approval and keep the same five-record cap.
 
-**Rule:** when one path fails, the next move is "another vector to the same goal", not "documented as not vulnerable". A real adversary doesn't have an engagement window.
+**Rule:** when one path fails, the next move is "another vector to the same goal", not "documented as not vulnerable". Continue within the approved engagement window and the shared research budget.
 
 ---
 
@@ -287,10 +249,10 @@ Why:
 ## Mindset correction #9 — Time is the constraint, not skill
 
 A real adversary has months. You have an engagement window (weeks). Decisions:
-- **Don't pre-judge feasibility** — if a dumper would take 6 hours, run it overnight; deliver partial results in the morning.
+- **Request time when justified** — follow the shared 30-45 minute deep-work budget. If a worthwhile lead needs longer, explain the evidence, remaining question, requested minutes and expected result in chat; continue that lead after approval.
 - **Parallelize.** Run multi-target tests concurrently. Burn CPU, not wall-clock.
 - **State persistence.** Engagements span multiple sessions. State files (`engagement_log/`) make Wednesday's work usable on Friday.
-- **Background long-running jobs** — kick them off, set monitors for events, do other work in parallel.
+- **Bound long-running work** — fit each job within the approved time budget; pause it at the deadline. A time-extension approval must be recorded before the affected work continues.
 - **Don't repeat yourself** — if you tested target X with payload Y on Tuesday, Wednesday you should know that without re-testing.
 
 ---
@@ -400,5 +362,5 @@ This skill is the operational discipline; those are the techniques.
 - **`hunt-dispatch`** — Once mindset is loaded, the `bug-bounty` orchestrator needs a mode answer (redteam vs wapt, blackbox vs greybox) before it routes to platform-specific skills. Engagement flow: red-team mindset triggered → confirm engagement mode (`bug-bounty` vs red-team vs pentest from the current authorization and scope) → invoke `hunt-dispatch` → load the right cluster (M365 / SharePoint / VPN / vCenter / APK).
 - **`mid-engagement-ir-detection`** — Red-team mindset says "behavior changes ARE findings"; this skill operationalizes that. Engagement flow: red-team engagement underway → baseline established at session start → response patterns shift mid-test → `mid-engagement-ir-detection` captures the SOC-patch state as a NEW finding (defensive-action observed = client capability metric). Don't dismiss it as "the bug got fixed."
 - **`redteam-report-template`** — Red-team deliverable is NOT a bug-bounty report; different audience, different tone, different cadence. Engagement flow: findings collected throughout engagement → at session close, package via `redteam-report-template` (Subject / Observations / Description / Impact / Recommendation / PoC) for client-facing DOCX, not `report-writing` which is for H1/Bugcrowd/Intigriti platforms.
-- **`triage-validation`** — Red-team mindset includes "don't retract too fast" — the 4 retractions from an authorized engagement were mindset failures, not validation failures. Engagement flow: every finding through `triage-validation` 7-Question Gate, but with the red-team adjustment that "exploitable only with chain" is still a finding, not a no-finding.
+- **`triage-validation`** — Red-team mindset includes "don't retract too fast" — the 4 retractions from an authorized engagement were mindset failures, not validation failures. Engagement flow: every finding through `triage-validation` 8-Question Gate, but with the red-team adjustment that "exploitable only with chain" is still a finding, not a no-finding.
 - **`evidence-hygiene`** — Red-team engagements often span weeks; without disciplined evidence capture the deliverable suffers. Engagement flow: red-team mindset triggered → set up `evidence-hygiene` capture cadence (screenshots, request/response dumps, timestamped logs) at session start, not at session close.

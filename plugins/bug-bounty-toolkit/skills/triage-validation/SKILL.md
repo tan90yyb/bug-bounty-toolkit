@@ -1,6 +1,6 @@
 ---
 name: triage-validation
-description: "Finding validation before writing any report — 7-Question Gate (all 7 questions), 4 pre-submission gates, always-rejected list, conditionally valid with chain table, CVSS 3.1 quick reference, severity decision guide, report title formula, 60-second pre-submit checklist. Use BEFORE writing any report. One wrong answer = kill the finding and move on. Saves N/A ratio."
+description: "Validate candidate findings before a formal vulnerability report using the unified eight-question gate, reproducibility checks, evidence review, and severity assessment. Keep incomplete leads as research notes with an evidence plan and the shared time budget."
 metadata:
   sources: community, operator_experience
 ---
@@ -9,95 +9,11 @@ metadata:
 
 # TRIAGE & VALIDATION
 
-One wrong answer = STOP **this finding**. Kill **the finding**. Move on **to the next test class**.
+## 统一八问（唯一问题定义）
 
-> **Scope of "STOP" in this skill:** This skill's gates kill INDIVIDUAL FINDINGS that fail validation. They do NOT authorize stopping the engagement. Killing a finding via the 7-Question Gate just means *that finding* doesn't get submitted — every other test class in the engagement is still pending. See `redteam-mindset` "DO NOT STOP primary directive" for the coverage-axis rule.
+读取[统一八问验证门](references/eight-question-gate.md)，按 Q1–Q8 的通过标准逐项回答并附证据。全部通过才输出正式漏洞报告。未通过题项形成补证计划；按[价值与时间规则](../bug-bounty/references/value-and-time.md)继续有价值的研究，需要加时就在聊天中说明理由、预计时长和目标，获得用户同意后继续。
 
-> "N/A hurts your validity ratio. Informative is neutral. Only submit what passes all 7 questions."
-
----
-
-## THE 7-QUESTION GATE
-
-Ask IN ORDER. One wrong answer = STOP immediately.
-
----
-
-### Q1: Can an attacker use this RIGHT NOW, step by step?
-
-Complete this template:
-```
-1. Setup:   I need [own account / another user's ID / no account]
-2. Request: [exact HTTP method, URL, headers, body — copy-paste ready]
-3. Result:  I can [read / modify / delete] [exact data shown in response]
-4. Impact:  The real-world consequence is [account takeover / PII read / money stolen]
-5. Cost:    Time: [X minutes], Capital: [$0 / $X subscription required]
-```
-
-**If you CANNOT write step 2 as a real HTTP request → KILL IT.**
-
----
-
-### Q2: Is the impact on the program's accepted impact list?
-
-Go to the program page. Find "Vulnerability Types" or "Out of Scope."
-
-Common tiers:
-- **Critical**: Any-user ATO without interaction, RCE, SQLi with data exfil, admin auth bypass
-- **High**: Mass PII exfil, privilege escalation, internal SSRF with data, stored XSS all users
-- **Medium**: IDOR on specific user non-critical data, XSS on sensitive page requiring click
-- **Low**: Non-sensitive info disclosure, clickjacking with PoC
-
-**If your bug maps to a listed exclusion → KILL IT.**
-
----
-
-### Q3: Is the root cause in an in-scope asset?
-
-Confirm:
-- Vulnerable domain is on the in-scope list (not `*.internal.target.com`)
-- It's a production asset (not staging/dev unless explicitly in scope)
-- It's not a third-party service the company just uses (not Stripe, Salesforce, Google Auth)
-
-**If out-of-scope → KILL IT.**
-
----
-
-### Q4: Does it require privileged access that an attacker can't realistically get?
-
-- "Admin can do X" = centralization risk = **KILL IT** (on 99% of programs)
-- "Non-admin can do X that only admin should do" = valid
-- "Requires physical access / MFA device" = usually invalid
-- "Requires compromised victim account to work" = questionable, low severity at best
-
----
-
-### Q5: Is this already known or accepted behavior?
-
-Search:
-1. Program's HackerOne/Bugcrowd disclosed reports: Ctrl+F endpoint name + bug class
-2. GitHub issues on target repo: `is:issue label:security ENDPOINT_NAME`
-3. Changelog/CHANGELOG.md — does it mention this behavior?
-4. API docs / design docs — is it documented as intended?
-
-**If acknowledged/design decision → KILL IT.**
-
----
-
-### Q6: Can you prove impact beyond "technically possible"?
-
-- XSS → use an authorized test account and a synthetic marker or harmless same-origin proof; never steal a real cookie or hijack a real session
-- SSRF → use an approved OAST callback or target-provided canary; never retrieve internal or cloud-metadata data
-- SQLi → use boolean/time-based behavior or a synthetic test row; never read a real production table
-- IDOR → compare two authorized test accounts containing synthetic data; never access an uninvolved user's record
-
-**If you can only show "technically possible" → DOWNGRADE severity, not kill.**
-
----
-
-### Q7: Is this a known-invalid bug class?
-
-Check the NEVER SUBMIT list below. If it's on this list without a chain → **KILL IT.**
+取证使用行为准则的统一规则：自建/合成数据优先；必要的授权验证中，同一漏洞累计最多 5 条真实信息，足够即止，跨接口、账号与重试共用上限；允许脱敏并保留复现所需结构。未证明的影响不得写成确认结论。
 
 ---
 
@@ -145,7 +61,7 @@ a well-formed `{}`. The false Critical was avoided only because someone re-teste
 - If the error text is about **input shape or character class**, you are talking to a
   parser or sanitiser, not to business logic.
 - If the error text names a **domain field** (`accountId is required`) AND a
-  well-formed body still returns it, that is a real signal — proceed to Q6.
+  well-formed body still returns it, that is a real signal — proceed to Q4 and Q5.
 - Applies equally to WAF and CDN layers: an edge block is not an origin response.
 
 ---
@@ -283,16 +199,11 @@ Build the chain first, prove it works end to end, THEN report.
 
 ---
 
-## KILL FAST RULES
+## 研究进度与报告判断
 
-The goal is to QUICKLY disqualify bad leads so you hunt real bugs:
+未能立即写出完整 PoC 时，记录具体证据缺口与下一步，按共同规则执行 20 分钟无进展复盘和 30～45 分钟深挖。值得继续且时间不足时，在聊天中申请加时。不得仅凭五分钟或三十分钟过去就认定线索无效。
 
-1. **5-minute rule**: If you can't fill in Q1's template in 5 minutes → move on
-2. **Precondition count**: More than 2 preconditions simultaneously required → kill it
-3. **Impact test**: "What does attacker walk away with?" — if nothing tangible → kill it
-4. **Admin bypass**: "Admin can do X" is NEVER a bug → kill it immediately
-5. **Design doc test**: If it's documented behavior → kill it immediately
-6. **Rabbit hole signal**: 30+ min on Q6 with no reproducible PoC → kill it
+现实前提、设计行为、项目规则和负面对照纳入八问判断。已经证明不成立的候选记录反证后换方向；尚待补证的候选保留研究状态。
 
 ---
 
@@ -311,7 +222,7 @@ Before labelling any finding **Critical** or **High** anywhere in your notes or 
 5. **Has the program rejected this severity class before?**
    — Many programs cap "info disclosure with no concrete impact" at Low/Info regardless of the data type. Read the program scope.
 
-**Lesson from an authorized engagement:** JWT `alg:none` was initially labelled **Critical** based on the signature-bypass primitive being confirmed at the audience-validation layer. Subsequent testing showed the issuer-trust check still rejected unsigned tokens — the full ATO chain did not complete. Finding had to be retracted. If the Pre-Severity Gate had been run on the original draft, Q1 would have killed the Critical label before submission.
+**Lesson from an authorized engagement:** JWT `alg:none` was initially labelled **Critical** based on the signature-bypass primitive being confirmed at the audience-validation layer. Subsequent testing showed the issuer-trust check still rejected unsigned tokens — the full ATO chain did not complete. Finding had to be retracted. If the Pre-Severity Gate had been run on the original draft, the impact and severity checks would have corrected the Critical label before submission.
 
 ---
 
@@ -357,11 +268,11 @@ When a previously-claimed finding fails reproduction — **never silently drop i
 
 ## Related Skills & Chains
 
-- **`report-writing`** — When all 7 questions pass and the Pre-Severity Gate is clean. Workflow primitive: this skill is the gate that runs BEFORE `report-writing`; only findings that clear all 7Q + 4 pre-submission gates get the report-template handoff.
+- **`report-writing`** — When all 8 questions pass and the Pre-Severity Gate is clean. Workflow primitive: this skill is the gate that runs BEFORE `report-writing`; only findings that clear all 8Q + 4 pre-submission gates get the report-template handoff.
 - **`bugcrowd-reporting`** — When a Bugcrowd VRT mapping is needed for an accepted finding. Workflow primitive: after this skill validates the finding, `bugcrowd-reporting` decides the VRT category and severity-request paragraph.
-- **`evidence-hygiene`** — When the validated finding needs PoC evidence captured. Workflow primitive: this skill says "Q6 requires proof of impact"; `evidence-hygiene` provides the capture-and-redact protocol for that proof.
+- **`evidence-hygiene`** — When the validated finding needs PoC evidence captured. Workflow primitive: this skill says "Q4 requires proof of impact"; `evidence-hygiene` provides the capture-and-redact protocol for that proof.
 - **`security-arsenal`** — When checking the always-rejected / conditionally-valid tables. Workflow primitive: this skill's "Never Submit List" and `security-arsenal`'s "Always Rejected" table are aligned; either entry-point lookup decides whether a primitive is reportable alone or only with a chain.
-- **`bb-methodology`** — When Phase 5 (Validate & Report) starts. Workflow primitive: Phase 5's pre-report gate explicitly invokes `/validate` (this skill's 7Q gate) before any report is drafted.
+- **`bb-methodology`** — When Phase 5 (Validate & Report) starts. Workflow primitive: Phase 5's pre-report gate explicitly invokes `/validate` (this skill's 8Q gate) before any report is drafted.
 
 ---
 
@@ -372,22 +283,12 @@ When a previously-claimed finding fails reproduction — **never silently drop i
 > skill-area live tests. The upstream methodology covers the WHAT; this
 > layer covers the WHEN-IT-ACTUALLY-WORKS and the FAILURE-MODES.
 
-### 7-Question Gate at scale
+### 八问中的常见证据误判
 
-The 7Q gate is the single highest-ROI artifact in this skill. Phase 2D's hardened-lab campaign verified it kills four distinct false-positive shapes:
-
-1. **URL echo dressed as reflection** — payload appears in the response body because the response IS the URL. Q1 (is this a real HTTP request that does something on the server) kills it.
-2. **Word collision dressed as marker hit** — the canary string `XSS-test` matched a CSS class name, not your injection. Marker Discipline + Q1 kill it.
-3. **Server policy mistaken for state oracle** — `download.aspx?file=foo.config` always returns "blocked" regardless of whether the file exists. Q6 (impact beyond technically possible) kills it: there's no oracle, just a deny-list.
-4. **200 OK without leak** — status code differs from baseline 403; body is byte-identical. Body-Diff Rule + Q6 kill it.
-
-Without the 7Q gate, expect 10-20% submission validity loss across an engagement. With it, retraction rates trend to single digits.
-
-### Pre-Severity Gate before reporting Critical
-
-A authorized SharePoint engagement nearly submitted a Critical when the chain didn't actually complete end-to-end — a primitive that read auth state was conflated with a primitive that mutated it. The Pre-Severity Gate (run all 7 questions specifically against the **Critical claim**, not the generic "is this a bug" claim) would have caught it.
-
-Process: write your draft Critical title. Take each of the 7 questions and answer them with the Critical claim substituted for "the bug." If Q6 (impact beyond technically possible) returns "I have a primitive that should let me do X, but I haven't demonstrated X end-to-end on a test account," downgrade. Critical means impact-demonstrated, not impact-inferable.
+- URL 回显或自然词命中不直接证明注入执行；用 Q2 的复现证据和 Q5 的基线比较核对。
+- 扩展名拒绝策略不直接证明文件存在；用 Q3 的因果证据和 Q5 的负面对照核对。
+- HTTP 200 且响应体与拒绝页面一致，不直接证明数据泄露；用 Q4 的影响与 Q5 的结果判断。
+- 报告 Critical/High 时，按 Q3、Q4、Q7、Q8 检查完整链、已证影响、实际范围及等级依据。
 
 ### Retraction discipline
 
@@ -398,24 +299,6 @@ If a finding stops reproducing 24h after submission — retract preemptively. Tw
 
 The retraction template in the RETRACTION DISCIPLINE section above is the canonical format. Don't silently delete — append a retraction appendix to the engagement report instead.
 
-### When the 7Q feels obstructive
+### 待补证时继续研究
 
-The friction is the gate working. The half of findings that get killed by the 7Q are the half that would have come back as Informative or N/A. Take the friction. Your average payout per submission goes up when low-confidence findings stop diluting the funnel.
-
-The exception: if the 7Q kills a finding but you still believe it, the answer is **gather more evidence**, not **bypass the gate**. The gate is a "do you have proof" check. Get proof, then re-run the gate.
-
-### Validation discipline rules cross-link
-
-The 7 questions are the umbrella; the discipline rules from `bb-methodology` are the implementation:
-
-| 7Q Question | Discipline Rule (bb-methodology) |
-|---|---|
-| Q1 (real HTTP request that does something) | Reproducibility Gate |
-| Q2 (impact beyond informational) | Pre-Severity Gate |
-| Q3 (server-side state change or data leak) | Server-Policy-vs-State |
-| Q4 (cross-tenant / cross-user demonstrated) | OOB Gate (for blind class), Marker Discipline (for reflective class) |
-| Q5 (not already known / dup) | disclosed-reports/ index + HackerOne hacktivity check |
-| Q6 (impact beyond technically possible) | OOB Gate + Body-Diff Rule + Statistical-Sample Rule |
-| Q7 (in scope per program rules) | scope.md lookup (engagement scaffold) |
-
-When a question is hard to answer "yes" to, the cross-linked rule tells you which artifact to produce to make the answer yes. Q6 is the one most engagements stumble on; that's why three discipline rules back it.
+某题暂时无法通过时，明确缺少哪项证据及可执行的下一步，沿用研究预算并按需要申请加时，再重新验证。问题定义和所有题号以[八问表](references/eight-question-gate.md)为准。

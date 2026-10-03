@@ -11,7 +11,9 @@ metadata:
 
 > Use this skill BEFORE capturing any screenshot, exporting any HAR, or attaching any evidence to a bug-bounty submission. It catches the most common evidence-hygiene mistakes that cause cookies to leak, PII to be shared without consent, or screenshots to be unsuitable for triage.
 
-The core principle: **Bug-bounty evidence is meant to convince a triager. Anything beyond that — live cookies, real-user PII, internal trace IDs that aren't useful — should not be in the evidence.**
+请求、响应、截图和 HAR 允许脱敏。脱敏后保留请求方法、端点、字段结构、角色/对象对应关系、关键响应差异及复现步骤；占位符需说明由复现者填入自己的测试会话或测试对象。
+
+授权方指定的受控位置可按复现需要保存最少原始证据；公开副本必须遮盖凭据与真实个人信息。真实信息读取沿用行为准则：同一漏洞累计最多 5 条，足够即止。以下遮盖方法与截图清单用于制作脱敏副本，原始证据的处理以这一统一规则为准。
 
 ---
 
@@ -21,10 +23,10 @@ Every PoC artifact (screenshot, HAR, raw HTTP request, terminal transcript) pote
 
 | Category | Examples | Treatment |
 |---|---|---|
-| **Your-account secrets** | Session cookies, OAuth tokens, refresh tokens, API keys | Always redact. Even in private bug-bounty platform attachments. Your account, your session — protect it. |
+| **Your-account secrets** | Session cookies, OAuth tokens, refresh tokens, API keys | Mask in redacted or public copies; retain a necessary original only in the approved controlled evidence location. |
 | **Other users' PII** | Real names, emails, phone numbers, addresses, profile photos, account IDs | Redact unless explicitly demonstrating cross-account impact. Even then, mask faces and minimize the data you display. |
 | **Triager-useful metadata** | Trace IDs (`x-datadog-trace-id`), request IDs, server timestamps, your test account UID/email, GraphQL operation names, response shapes | **Leave visible** — these help the triager correlate to logs and reproduce. |
-| **Test-account passwords (limited use)** | Throwaway passwords on a test account (e.g., `Testing@5678`) | Acceptable in screenshots if you rotate immediately after submission so the value shown is dead. Don't leave real-use passwords in evidence. |
+| **Test-account passwords (limited use)** | Throwaway passwords on a test account (e.g., `Testing@5678`) | Use placeholders in redacted copies. Keep credential changes under the operator's control. |
 
 ---
 
@@ -129,7 +131,7 @@ Reference the redaction explicitly:
 ```markdown
 ## Proof of Concept
 
-The screenshot below demonstrates the IDOR. The attacker session (uid 12345678) successfully retrieves the victim's profile data (uid 99887766). **Real PII fields in the response are masked with black rectangles to limit unauthorized exposure of victim data, per responsible-disclosure hygiene.** The unredacted response is available privately on request.
+The screenshot below demonstrates the IDOR. The attacker session (uid 12345678) successfully retrieves the victim's profile data (uid 99887766). **Real PII fields in the response are masked with black rectangles to limit unauthorized exposure of victim data, per responsible-disclosure hygiene.** Any necessary original evidence is handled only through the agreed controlled location.
 ```
 
 This signals the triager that you're disciplined and gives them a clear path to the unredacted version if they need it for verification.
@@ -323,17 +325,13 @@ In the report body, reference each by filename:
 
 After clicking Submit on the bug-bounty platform:
 
-### 8.1 Rotate the test account credentials
+### 8.1 会话与凭据由用户控制
 
-```
-1. Log out of the target
-2. Log back in (this rotates the session cookie — any cookie shown in your screenshots is now dead)
-3. Change the password to a fresh value not used elsewhere (any password shown in your screenshots is now dead)
-```
+如证据暴露了测试会话，说明风险并让用户决定如何撤销。不能因制作或提交报告自动退出登录或修改密码。
 
-### 8.2 Save the unredacted artifacts privately
+### 8.2 按约定保存原始证据与脱敏副本
 
-Keep your unredacted HARs / screenshots in a local folder accessible only to you. The triager may ask for the unredacted version during verification. **Never share unredacted artifacts via email — use the platform's private attachment system on the existing submission thread.**
+原始证据仅保存到授权方指定的受控位置，遵守最少必要、访问权限和保存期限。脱敏副本应保留可复现关系；不得自动将原始 HAR 或真实信息放入公共仓库或私人存储。
 
 ### 8.3 Don't post about the finding publicly
 

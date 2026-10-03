@@ -273,7 +273,7 @@ brew install websocat                # alt client; supports text/binary + autore
 
 ## Validation (mandatory before reporting)
 
-- ✅ **CSWSH:** use two authorized test accounts and a unique synthetic marker. Confirm only that the marker reaches the attacker-controlled test client; never receive, copy, or forward a real user's data or PII. A bare `101` from a foreign Origin is not sufficient, but real-data exfiltration is prohibited.
+- ✅ **CSWSH:** prefer two authorized test accounts and a unique synthetic marker. A bare `101` from a foreign Origin is insufficient. Necessary real-record validation follows the shared maximum of five records per finding; stop receiving after sufficient evidence or the cap, avoid uncontrolled streams, and retain evidence only in the approved location.
 - ✅ **No per-message auth:** privileged frame produces a **verifiable server-side effect** (state change confirmed via a second channel / REST API), not merely "accepted".
 - ✅ **Message tampering:** tampered value **persists server-side** (confirmed via order/balance API), not just echoed in the UI.
 - ✅ **Namespace/room bypass:** received **`42` event frames with another user's data**, not just a `40` namespace ack.

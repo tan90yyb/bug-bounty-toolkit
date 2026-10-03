@@ -22,6 +22,11 @@ The two failure modes this skill prevents:
 
 **Rule: ownership is guilty-until-proven. An asset is the target's only when a concrete ownership signal ties it to the target — never because a scanner's keyword matched.**
 
+For this operator's domain-led workflow, an ICP filing registrant belonging to
+the user-named target company is sufficient to add that domain to the current
+testing range. Record the filing evidence. Another company's filing or an
+unconfirmed registrant stays pending and is not probed automatically.
+
 ---
 
 ## The collision sources (where keyword-matching lies)
@@ -86,7 +91,7 @@ On a real engagement against a dictionary-word brand, after clearing this noise 
 
 ## Related Skills & Chains
 
-- **`triage-validation`** — asset-ownership triage (this skill) precedes finding-validity triage (the 7-Question Gate). Ownership first, then validity.
+- **`triage-validation`** — asset-ownership triage (this skill) precedes finding-validity triage (the 8-Question Gate). Ownership first, then validity.
 - **`redteam-mindset`** — "aggressive default" means probe every *owned* live surface; this skill defines which surfaces are owned so persistence isn't wasted on collisions.
 - **`hunt-spa-api`** — once an API host passes ownership triage, this is how you test it.
 - **`offensive-osint` / `osint-methodology`** — feed ownership anchors (verified domains, tenant brand, dev accounts) from OSINT into this triage.

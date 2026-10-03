@@ -16,6 +16,10 @@ payload family, or test class. They never mean end the authorized engagement. Co
 agreed coverage plan until every selected axis has an evidence-backed result, the user stops the
 work, or an external blocker prevents further progress.
 
+## 网站价值与时间安排（执行前必读）
+
+读取[网站价值分类与时间安排](references/value-and-time.md)：Tier 0/1 优先；逐站记录分类理由、当前模式、实际耗时与延长状态。30 秒～1 分钟轻量启动、≤3 分钟异常快验、20 分钟无进展复盘、30～45 分钟深挖与一次延长申请均使用同一规则。各研究技能的选站与时间建议服从本轮用户预算和该规则。
+
 ## Codex runtime contract
 
 - Use this skill as the main orchestrator. Start with `bb-methodology`, then route through
@@ -24,49 +28,39 @@ work, or an external blocker prevents further progress.
   sandbox permissions. Do not assume another agent's paths, commands, subagents, or slash commands exist.
 - Keep testing inside the user's explicitly authorized scope. Confirm the engagement type and scope
   before active probes, and obtain approval immediately before consequential external actions.
+- When the operator already runs ARL and wants to import its completed results, use `arl-results`
+  to read tasks and assets before choosing live-host tests. ARL reads do not launch scans.
+- For the operator's company-based scope, a discovered domain whose ICP filing registrant
+  belongs to the user-named target company enters the testing range. Record the filing
+  evidence; keep another company's or unconfirmed assets pending rather than probing them.
 - Finish with `triage-validation`, then use `report-writing`, `bugcrowd-reporting`, or
   `redteam-report-template` according to the engagement type.
 
-## THE ONLY QUESTION THAT MATTERS
+## 研究线索与正式报告
 
-> **"Can an attacker do this RIGHT NOW against a real user who has taken NO unusual actions -- and does it cause real harm (stolen money, leaked PII, account takeover, code execution)?"**
->
-> If the answer is NO -- **STOP. Do not write. Do not explore further. Move on.**
+未立即证明影响的线索，记录现有证据、假设、下一步及研究价值，按共同时间规则继续分析或申请加时。已证伪、范围不符或没有可执行下一步时，记录原因并调整方向。
 
-### Theoretical Bug = Wasted Time. Kill These Immediately:
-
-| Pattern | Kill Reason |
-|---|---|
-| "Could theoretically allow..." | Not exploitable = not a bug |
-| "An attacker with X, Y, Z conditions could..." | Too many preconditions |
-| "Wrong implementation but no practical impact" | Wrong but harmless = not a bug |
-| Dead code with a bug in it | Not reachable = not a bug |
-| Source maps without secrets | No impact |
-| SSRF with DNS-only callback | Need safe proof of controllable server-side fetch, reachability, or target-provided canary; never exfiltrate real/internal data |
-| Open redirect alone | Need ATO or OAuth chain |
-| "Could be used in a chain if..." | Build the chain first, THEN report |
-
-**You must demonstrate actual harm. "Could" is not a bug. Prove it works or drop it.**
+正式报告使用[统一八问验证门](../triage-validation/references/eight-question-gate.md)。只有实际证明的影响可以写成确认结论，未完成的链条保留为研究笔记。
 
 ---
 
 ## CRITICAL RULES
 
 1. **READ FULL SCOPE FIRST** -- verify every asset/domain is owned by the target org
-2. **NO THEORETICAL BUGS** -- "Can an attacker steal funds, leak PII, takeover account, or execute code RIGHT NOW?" If no, STOP.
-3. **KILL WEAK FINDINGS FAST** -- run the 7-Question Gate BEFORE writing any report
+2. **EVIDENCE-BASED CLAIMS** -- keep unproven leads as research hypotheses; continue worthwhile investigation within the shared time budget and request more time in chat when needed. Formal findings require the unified eight-question gate.
+3. **VALIDATE BEFORE REPORTING** -- use the unified eight-question gate; record evidence gaps and the next research step for incomplete candidates.
 4. **Validate before writing** -- check CHANGELOG, design docs, deployment scripts FIRST
 5. **One bug class at a time** -- go deep, don't spray
 6. **Verify data isn't already public** -- check web UI in incognito before reporting API "leaks"
-7. **5-MINUTE RULE** -- if a target shows nothing after 5 min probing (all 401/403/404), MOVE ON
-8. **IMPACT-FIRST HUNTING** -- ask "what's the worst thing if auth was broken?" If nothing valuable, skip target
+7. **20-MINUTE REVIEW** -- after 20 minutes without meaningful progress on the current direction, review evidence and choose rotation or a reasoned continuation under the shared value/time policy; retain every sub-site in the queue.
+8. **VALUE-FIRST HUNTING** -- rank observed business/data/role leads by the shared Tier 0-3 policy. Preserve unknown sites for classification and record low-value deferrals with their evidence.
 9. **CREDENTIAL LEAKS need exploitation proof** -- finding keys isn't enough, must PROVE what they access
-10. **STOP SHALLOW RECON SPIRALS** -- don't probe 403s, don't grep for analytics keys, don't check staging domains that lead nowhere
+10. **EVIDENCE-LED RECON** -- avoid repeating the same failed or irrelevant checks. Record 403/access barriers and staging-site observations; assess their business value and next permitted action before deferring them.
 11. **BUSINESS IMPACT over vuln class** -- severity depends on CONTEXT, not just vuln type
 12. **UNDERSTAND THE TARGET DEEPLY** -- before hunting, learn the app like a real user
 13. **DON'T OVER-RELY ON AUTOMATION** -- automated scans hit WAFs, trigger rate limits, find the same bugs everyone else finds
 14. **HUNT LESS-SATURATED VULN CLASSES** -- XSS/SSRF/XXE have the most competition. Expand into: cache poisoning, Android/mobile vulns, business logic, race conditions, OAuth/OIDC chains, CI/CD pipeline attacks
-15. **ONE-HOUR RULE** -- stuck on one target for an hour with no progress? SWITCH CONTEXT
+15. **DEEP TIME BOX** -- high-value leads use a declared 30-45 minute plan, at most 45 minutes before closure or one approved extension; preserve the same lead timer when resuming.
 16. **TWO-EYE APPROACH** -- combine systematic testing (checklist) with anomaly detection (watch for unexpected behavior)
 17. **T-SHAPED KNOWLEDGE** -- go DEEP in one area and BROAD across everything else
 
@@ -162,7 +156,7 @@ Client -> CDN -> Load Balancer -> App Server -> Database
 
 ## The Top 1% Mental Checklist
 - [ ] I know the app's core business model
-- [ ] I've used the app as a real user for 15+ minutes
+- [ ] I've mapped the relevant normal user flow and recorded its evidence within the current phase budget
 - [ ] I know the tech stack (language, framework, auth system, caching)
 - [ ] I've read at least 3 disclosed reports for this program
 - [ ] I have 2 test accounts ready (attacker + victim)
@@ -284,30 +278,17 @@ ffuf -w subs.txt -u https://FUZZ.target.com -ac
 
 # PHASE 1: RECON
 
-## Standard Recon Pipeline
-```bash
-# Step 1: Subdomains
-subfinder -d TARGET -silent | anew /tmp/subs.txt
-assetfinder --subs-only TARGET | anew /tmp/subs.txt
+## Standard Recon Pipeline — 信息收集
 
-# Step 2: Resolve + live hosts
-cat /tmp/subs.txt | dnsx -silent | httpx -silent -status-code -title -tech-detect -o /tmp/live.txt
+执行 [`web2-recon` 的信息收集流程](../web2-recon/SKILL.md)：
 
-# Step 3: URL collection
-cat /tmp/live.txt | awk '{print $1}' | katana -d 3 -silent | anew /tmp/urls.txt
-echo TARGET | waybackurls | anew /tmp/urls.txt
-gau TARGET | anew /tmp/urls.txt
+**ARL 主采集 → 导入与去重 → 归属和在线证据核对 → 统一站点清单 → 按业务逐站深入收集 → 覆盖情况与后续计划。**
 
-# Step 4: Nuclei scan
-nuclei -l /tmp/live.txt -severity critical,high,medium -silent -o /tmp/nuclei.txt
-
-# Step 5: JS secrets
-cat /tmp/urls.txt | grep "\.js$" | sort -u > /tmp/jsfiles.txt
-# Run SecretFinder on each JS file
-
-# Step 6: GitHub dorking (if target has public repos)
-# GitDorker -org TARGET_ORG -d dorks/alldorksv3
-```
+- Toolkit 补充 ARL 的数据源缺口并分析页面、接口、JS、历史 URL 和业务关系。
+- 使用同一个 `RECON_DIR`，交接 `asset-inventory.csv`、`pending-assets.csv`、`live-sites.txt`、`live-hosts.txt`、`site-queue.csv` 和 `progress.jsonl`。HTTP 流程读取保留协议和端口的 `live-sites.txt`。
+- 按队列处理范围内的子站，逐站记录完成、受阻、失败或延期原因；清单缺失时修复交接，禁止默认退回起始域名。
+- 当前 ARL 连接器只读取结果。新建/重跑 ARL 任务需由实际支持该能力且获授权的执行方式完成，不能把读 API 当作已运行收集任务。
+- 用户只要求信息收集时，交付本阶段结果与后续计划。下面的云资源枚举、参数/目录 fuzzing、漏洞扫描和测试示例，只在后续任务包含相应方法时按需使用。
 
 ## Cloud Asset Enumeration
 ```bash
@@ -471,8 +452,8 @@ HIGHEST PRIORITY (crown jewel x easiest entry):
 - GET /api/export returns 200 even when session cookie is missing
 - Response time: POST /api/check-user -> 150ms (exists) vs 8ms (doesn't)
 
-## Rabbit Holes (time-boxed, max 15 min each)
-- [ ] 10 min: JWT kid injection on auth endpoint
+## Research directions (shared value/time policy)
+- [ ] auth origin, lead=jwt-key-selection, Tier=unknown, mode=exploration, elapsed=0; review after 20 min without progress; deep mode requires its own declaration
 
 ## Confirmed Bugs
 - [15:10] IDOR on /api/invoices/{id} -- read+write
@@ -1182,11 +1163,11 @@ ${7*7}           -> 49 = Freemarker / Pebble / Velocity
 ### Detection
 ```bash
 # Check for dangling CNAMEs
-cat /tmp/subs.txt | dnsx -silent -cname -resp | grep -i "CNAME" | tee /tmp/cnames.txt
+cat "$RECON_DIR/subdomains.txt" | dnsx -silent -cname -resp | grep -i "CNAME" | tee /tmp/cnames.txt
 # Look for CNAMEs to: github.io, heroku.com, azurewebsites.net, netlify.app, s3.amazonaws.com
 
 # Automated takeover detection
-nuclei -l /tmp/subs.txt -t ~/nuclei-templates/takeovers/ -o /tmp/takeovers.txt
+nuclei -l "$RECON_DIR/subdomains.txt" -t ~/nuclei-templates/takeovers/ -o /tmp/takeovers.txt
 ```
 
 ### Quick-Kill Fingerprints
@@ -1297,30 +1278,9 @@ curl -s http://TARGET:2375/containers/json
 
 # PHASE 4: VALIDATE
 
-## The 7-Question Gate (Run BEFORE Writing ANY Report)
+## 统一八问验证门（正式漏洞报告前）
 
-All 7 must be YES. Any NO -> STOP.
-
-### Q1: Can I exploit this RIGHT NOW with a real PoC?
-Write the exact HTTP request. If you cannot produce a working request -> KILL IT.
-
-### Q2: Does it affect a REAL user who took NO unusual actions?
-No "the user would need to..." with 5 preconditions. Victim did nothing special.
-
-### Q3: Is the impact concrete (money, PII, ATO, RCE)?
-"Technically possible" is not impact. "I read victim's SSN" is impact.
-
-### Q4: Is this in scope per the program policy?
-Check the exact domain/endpoint against the program's scope page.
-
-### Q5: Did I check Hacktivity/changelog for duplicates?
-Search the program's disclosed reports and recent changelog entries.
-
-### Q6: Is this NOT on the "always rejected" list?
-Check the list below. If it's there and you can't chain it -> KILL IT.
-
-### Q7: Would a triager reading this say "yes, that's a real bug"?
-Read your report as if you're a tired triager at 5pm on a Friday. Does it pass?
+读取[统一八问及通过标准](../triage-validation/references/eight-question-gate.md)，按 Q1–Q8 逐题填写答案、理由和证据位置。全部通过后进入正式报告；待补证的候选按价值与时间规则继续研究或申请加时。
 
 ## 4 Pre-Submission Gates
 
@@ -1386,7 +1346,7 @@ Read your report as if you're a tired triager at 5pm on a Friday. Does it pass?
 
 Missing CSP/HSTS/security headers, missing SPF/DKIM/DMARC, GraphQL introspection alone, banner/version disclosure without working CVE exploit, clickjacking on non-sensitive pages, tabnabbing, CSV injection, CORS wildcard without credential exfil PoC, logout CSRF, self-XSS, open redirect alone, OAuth client_secret in mobile app, SSRF DNS-ping only, host header injection alone, no rate limit on non-critical forms, session not invalidated on logout, concurrent sessions, internal IP disclosure, mixed content, SSL weak ciphers, missing HttpOnly/Secure cookie flags alone, broken external links, pre-account takeover (usually), autocomplete on password fields.
 
-**N/A hurts your validity ratio. Informative is neutral. Only submit what passes the 7-Question Gate.**
+**N/A hurts your validity ratio. Informative is neutral. Only submit what passes the 8-Question Gate.**
 
 ## Conditionally Valid With Chain
 
@@ -1563,7 +1523,7 @@ validation, evidence, and reporting companion skills; no external agent-specific
 - **`bb-methodology`** — When a hunting session starts and the user is "lost about what to do next." Workflow primitive: this skill is the orchestrator; `bb-methodology` is the 5-phase workflow it routes to. Load `bb-methodology` FIRST, then this skill names the topic-matched hunt-* skills.
 - **`hunt-dispatch`** — When PART 0 mode (red team / WAPT) has been confirmed. Workflow primitive: this skill's "what should I do" routing hands off to `hunt-dispatch` for the platform fingerprint + skill-set load.
 - **`web2-recon`** + **`offensive-osint`** — When Phase 1 (recon) starts. Workflow primitive: this skill's "Standard Recon Pipeline" section delegates the live execution to `web2-recon` and the operational arsenal (probes / wordlists / regexes) to `offensive-osint`.
-- **`triage-validation`** + **`report-writing`** — When a finding completes Phase 4. Workflow primitive: this skill routes to `triage-validation` (7Q gate) → only if all 7 pass, hand off to `report-writing` for the platform-specific body.
+- **`triage-validation`** + **`report-writing`** — When a finding completes Phase 4. Workflow primitive: this skill routes to `triage-validation` (8Q gate) → only if all 8 pass, hand off to `report-writing` for the platform-specific body.
 
 ---
 

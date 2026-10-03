@@ -11,7 +11,7 @@ metadata:
 
 > Companion to the generic `report-writing` skill. Use when working specifically on Bugcrowd submissions where VRT mapping, OOS-clause rebuttals, or per-program target selection matter.
 
-This skill encodes patterns that apply specifically to Bugcrowd's submission flow. For the generic per-platform templates (HackerOne / Bugcrowd / Intigriti / Immunefi report bodies), use the `report-writing` skill. For the 7-Question Gate before deciding to report at all, use `triage-validation`.
+This skill encodes patterns that apply specifically to Bugcrowd's submission flow. For the generic per-platform templates (HackerOne / Bugcrowd / Intigriti / Immunefi report bodies), use the `report-writing` skill. For the 8-Question Gate before deciding to report at all, use `triage-validation`.
 
 ---
 
@@ -300,7 +300,7 @@ Maintain a simple text file with each submission's UUID, severity, and one-line 
 
 | For this question / task | Use this skill |
 |---|---|
-| "Should I report this finding at all?" | `triage-validation` (7-Question Gate) |
+| "Should I report this finding at all?" | `triage-validation` (8-Question Gate) |
 | "What's the report body template for Bugcrowd?" | `report-writing` |
 | "What VRT do I pick?" | This skill (`bugcrowd-reporting`) §1 |
 | "How do I argue for higher severity?" | This skill §2-3 |
@@ -320,7 +320,7 @@ This skill is small and focused. It does NOT duplicate content from `report-writ
 ## Related Skills & Chains
 
 - **`report-writing`** — Always load this skill alongside `bugcrowd-reporting`. Workflow primitive: `report-writing` provides the body skeleton; this skill layers VRT selection + severity-request paragraph + OOS-clause rebuttals on top of that skeleton.
-- **`triage-validation`** — When deciding if a Bugcrowd-bound finding will pass triage. Workflow primitive: 7Q gate runs first; only validated findings reach this skill for VRT mapping.
+- **`triage-validation`** — When deciding if a Bugcrowd-bound finding will pass triage. Workflow primitive: 8Q gate runs first; only validated findings reach this skill for VRT mapping.
 - **`evidence-hygiene`** — When attaching screenshots / HARs to a Bugcrowd submission. Workflow primitive: Bugcrowd's private attachment system requires redacted evidence; route everything through `evidence-hygiene` before clicking attach.
 - **`security-arsenal`** — When the PoC step needs payloads cited verbatim. Workflow primitive: the "Steps to Reproduce" section in this skill's report bodies pulls exact payloads from `security-arsenal` so the triager can paste-and-run.
 - **`bb-methodology`** — When confirming engagement mode is bug-bounty (not red-team). Workflow primitive: PART 0 of `bb-methodology` answers "bug bounty?"; if yes AND the target is Bugcrowd, this skill becomes the reporting overlay.
