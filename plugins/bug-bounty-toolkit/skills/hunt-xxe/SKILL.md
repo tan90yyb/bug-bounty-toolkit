@@ -1,12 +1,14 @@
 ---
 name: hunt-xxe
-description: "Hunting skill for xxe vulnerabilities. Built from 10 public bug bounty reports including SVG-upload XXE, Office-doc (PPTX/DOCX) XXE, SOAP XXE, SAML AssertionConsumer XXE, blind OOB XXE via DTD callback, parameter-entity XXE, XXE-to-LFI, XXE-to-SSRF, and XXE-to-RCE chains (Adobe Commerce CosmicSting CVE-2024-34102). Use when hunting XXE on any target — emphasis on OOB-Or-It-Didn't-Happen Gate for blind cases."
+description: "Hunting skill for xxe vulnerabilities. Built from 10 public bug bounty reports including SVG-upload XXE, Office-doc (PPTX/DOCX) XXE, SOAP XXE, SAML AssertionConsumer XXE, blind OOB XXE via DTD callback, parameter-entity XXE, XXE-to-LFI, XXE-to-SSRF, and XXE-to-RCE chains (Adobe Commerce CosmicSting CVE-2024-34102). Use when hunting XXE on any target — emphasis on OOB evidence check (supports Q3–Q5) for blind cases."
 metadata:
   sources: github, hackerone_public, assetnote_research, splunk_security
   report_count: 10
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+技术示例服从用户工作流：密码修改、退出/登出、破坏生产及批量提取不执行。登录与认证入口本身可测试；正常登录沿用审批豁免。需要真实数据时读取[去重计数规则](../bug-bounty/references/real-records.md)，同一漏洞最多 5 条不同真实记录，重复不计数；攻击链中违反边界的操作只记录未执行步骤，用测试数据或其他证据核对。
 
 ## Crown Jewel Targets
 
@@ -335,24 +337,13 @@ XXE classic payloads (`<!ENTITY xxe SYSTEM "file://...">`) are not universally e
 - `Server: Microsoft-IIS` with `.aspx` and XML SOAP → **likely YES** on legacy code
 - Server says nothing identifiable + endpoint accepts XML → **probe with `&hello;` first**; if the inline entity expands, escalate to SYSTEM. If the inline entity also fails to expand, the parser may be hardened — pivot.
 
-**Pre-Severity Gate:** before claiming XXE on a candidate endpoint, run the inline-entity probe (`<!ENTITY hello "world!">` then `&hello;` in a node). If `hello!` does NOT echo back, parser-level entity expansion is disabled and SYSTEM file:// won't work either. Don't waste cycles on a hardened parser.
+**eight-question evidence checks:** before claiming XXE on a candidate endpoint, run the inline-entity probe (`<!ENTITY hello "world!">` then `&hello;` in a node). If `hello!` does NOT echo back, parser-level entity expansion is disabled and SYSTEM file:// won't work either. Don't waste cycles on a hardened parser.
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-Before writing the report, answer all three:
-
-1. **What can the attacker DO right now?**
-   - Can you show the contents of `/etc/passwd` or `win.ini` in the response? OR can you demonstrate a confirmed OOB callback with a file's contents transmitted to your server? OR can you reach an internal SSRF endpoint (metadata, internal admin)?
-
-2. **What does the victim LOSE?**
-   - Specific sensitive data must be identified: internal credentials, AWS IAM keys, application config files with DB passwords, PII, or internal network topology. "Parser made a DNS request" alone is insufficient — escalate to demonstrate actual data exposure or internal access.
-
-3. **Can it be reproduced in 10 minutes from scratch?**
-   - You must have a single `curl` command or Burp repeater request that a triage engineer can run against the live target and see the impact within 10 minutes, with zero ambiguity about the vulnerable parameter and endpoint.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Real Impact Examples
 
@@ -375,7 +366,7 @@ A REST API endpoint nominally accepting JSON was found to also parse requests su
 
 ## Disclosed Report Citations (Backfill +6 — 2016-2024)
 
-The following real, verified bug-bounty / coordinated-disclosure cases extend this skill. Three cases (#7, #9, #10) are OOB-required (blind) — they cross-reference the `hunt-ssrf` OOB-Or-It-Didn't-Happen Gate and cannot be claimed without a Collaborator/interactsh callback.
+The following real, verified bug-bounty / coordinated-disclosure cases extend this skill. Three cases (#7, #9, #10) are OOB-required (blind) — they cross-reference the `hunt-ssrf` OOB evidence check (supports Q3–Q5) and cannot be claimed without a Collaborator/interactsh callback.
 
 5. **Mail.ru — Pulse RSS/Atom feed XXE (file read)** ([H1 #505947](https://hackerone.com/reports/505947))
     - Subclass: direct file-read XXE (in-band)
@@ -422,4 +413,4 @@ The following real, verified bug-bounty / coordinated-disclosure cases extend th
 - **`hunt-rce`** — XXE → RCE is rare but real on PHP (`expect://`), Java (XSLT extensions with `<xsl:script>`/Xalan), and older XmlSpy/SAXON deployments. Chain primitive: XXE in a Java endpoint using a vulnerable XSLT processor → `<xsl:value-of select="rt:exec(rt:getRuntime(),'id')"/>` → RCE; or PHP XXE with `expect://id` stream wrapper enabled → direct RCE.
 - **`hunt-sharepoint`** — On-prem SharePoint/Exchange/IIS stacks have a long history of XXE in SOAP/CSOM/EWS endpoints. Chain primitive: anonymous XXE in `_vti_bin/*.asmx` or EWS SOAP → read `web.config` → recover `<machineKey>` → ViewState deserialization → RCE (the ToolShell-adjacent precondition).
 - **`security-arsenal`** — Reach for the XXE payload tree: standard SYSTEM file read, parameter-entity OOB DTD pattern (the `%` indirection that makes blind XXE work), `php://filter/convert.base64-encode/resource=` for binary-safe read, XInclude (`<xi:include href=...>`) when DOCTYPE is blocked, billion-laughs/quadratic-blowup for DoS, and the `jar://` / `netdoc://` Java-specific wrappers.
-- **`triage-validation`** — Apply the Reproducibility + Pre-Severity Gates and the mandatory conduct policy. Validate with an approved OAST callback, a target-provided harmless canary file, or isolated-lab evidence. Never read `/etc/passwd`, `web.config`, cloud metadata, credentials, or other real system data merely to raise severity; document the unexecuted impact path instead.
+- **`triage-validation`** — 使用统一八问。回调、文件读取、配置或实验环境证据均可作为候选方法；实际操作按用户范围、审批、数据上限与生产规则执行。

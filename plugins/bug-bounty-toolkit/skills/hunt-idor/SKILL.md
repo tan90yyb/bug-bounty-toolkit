@@ -6,7 +6,13 @@ metadata:
   report_count: 39
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+技术示例服从用户工作流：密码修改、退出/登出、破坏生产及批量提取不执行。登录与认证入口本身可测试；正常登录沿用审批豁免。需要真实数据时读取[去重计数规则](../bug-bounty/references/real-records.md)，同一漏洞最多 5 条不同真实记录，重复不计数；攻击链中违反边界的操作只记录未执行步骤，用测试数据或其他证据核对。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 ## Crown Jewel Targets
 
@@ -285,25 +291,9 @@ done
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-Before writing the report, answer all three:
-
-1. **What can the attacker DO right now?**
-   Be specific: "Attacker with a valid account can send a GET request to `/api/v1/invoices/{victim_invoice_id}` and receive the victim's full billing document including name, address, and payment amount — without any relationship to that account."
-
-2. **What does the victim LOSE?**
-   Map to CIA triad: confidentiality (data exposed), integrity (data modified), or availability (data deleted). "Victim loses confidentiality of private financial records" or "Victim's content is deleted by a third party" — vague answers fail.
-
-3. **Can it be reproduced in 10 minutes from scratch?**
-   - Two fresh accounts created ✓
-   - Exact HTTP request documented with victim's ID ✓
-   - 200 OK response showing victim's data (or confirmed state change) ✓
-   - No reliance on pre-existing state or timing ✓
-   
-   If you can't demo it reproducibly, do not file the report.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Real Impact Examples
 
@@ -342,7 +332,7 @@ Standalone IDOR gets paid at Low-Medium for cross-tenant *read*. The real money 
 
 - **A.** Target uses GraphQL with Relay-style global IDs (`gid://shopify/Customer/<n>` or base64-encoded `type:id` patterns).
 - **B.** `node(id:"<victim_gid>") { ... on Customer { email orders { totalPrice paymentMethods { cardLast4 } } } }` — the top-level `node()` resolver auths the requester, but nested relations don't re-check ownership against the resolved Customer.
-- **C.** Iterate IDs (decoding base64 to extract numeric, incrementing) to exfil emails, order totals, payment methods across the entire customer base.
+- **C.** Verify with authorized test objects first. If distinct real records are necessary, restrict object selection and nested results to the remaining shared allowance, record object identities in the ledger, and stop once proof is sufficient. Do not enumerate the entire customer base.
 - **Impact:** Mass cross-tenant PII / financial data extraction. Single bug, full database.
 - **Real shape:** Shopify Billing IDOR H1 #2207248 ($5,000); HackerOne PolicyPageAssetGroup IDOR H1 #1618347 ($25,000). Cross-refs `hunt-graphql` Disclosed Report Citation #5 and #2.
 
@@ -389,4 +379,4 @@ Cross-references:
 - **`hunt-ato`** — Profile-edit IDOR is the most direct path from "read someone's data" to "own their account." Chain primitive: `PATCH /api/users/{victim_uid}` accepts attacker's session + victim UID → set `email=attacker@evil.com` → trigger password reset → reset link arrives at attacker → full ATO without ever knowing victim credentials.
 - **`hunt-graphql`** — GraphQL resolvers without field-level authorization are IDOR-by-default; introspection hands you the schema. Chain primitive: `__schema` introspection → enumerate every mutation accepting `id:` argument → substitute victim IDs across `updateUser`, `deleteOrg`, `transferBilling` mutations → mass IDOR fan-out from one introspection query.
 - **`security-arsenal`** — Pull the IDOR Bypass Tables section for HTTP-parameter-pollution payloads (`?id=own&id=victim`), nested-JSON wrappers (`{"data":{"id":"VICTIM"}}`), and parameter-name variations (`uid`/`userId`/`user_id`/`account`) when the first direct substitution returns 403.
-- **`triage-validation`** — Run the Pre-Severity Gate before claiming Critical on an IDOR that returns 200 but doesn't actually leak data (empty array, redacted fields, "access denied" in body with 200 status). The 200-but-no-data IDOR is the #1 N/A driver on H1/Bugcrowd.
+- **`triage-validation`** — Run the eight-question evidence checks before claiming Critical on an IDOR that returns 200 but doesn't actually leak data (empty array, redacted fields, "access denied" in body with 200 status). The 200-but-no-data IDOR is the #1 N/A driver on H1/Bugcrowd.

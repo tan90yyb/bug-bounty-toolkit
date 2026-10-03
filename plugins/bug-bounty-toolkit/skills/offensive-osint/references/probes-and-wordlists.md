@@ -1255,7 +1255,7 @@ puredns resolve <(awk -v d="$D" '{print $1"."d}' assetnote-best-dns-wordlist.txt
 
 **What to extract from each hit:**
 - IP / IP block → ASN lookup (§28.1) → confirms target-owned vs hosted-elsewhere.
-- For `vpn.*` / `gateway.*` / `gp.*` / `globalprotect.*` / `citrix.*` → flag for active vendor fingerprint (§16.16) under separate engagement scope.
+- For `vpn.*` / `gateway.*` / `gp.*` / `globalprotect.*` / `citrix.*` → flag for active vendor fingerprint (§16.16) under the same user asset and method rules.
 - For `api.*` / `app.*` → seed for §16.1–16.10 webapp probes.
 - For `staging.*` / `dev.*` / `uat.*` → seed for §16.5 always-on HTTP checks (often weaker auth + debug endpoints).
 - For `intranet.*` / `eapps.*` / `eproc.*` / similar internal-app shortnames → public-intranet finding (often MEDIUM; per §40).

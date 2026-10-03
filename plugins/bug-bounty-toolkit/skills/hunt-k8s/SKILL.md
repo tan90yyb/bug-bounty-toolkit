@@ -6,7 +6,7 @@ metadata:
   report_count: 13
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-K8S — Kubernetes & Docker Security
 
@@ -26,7 +26,7 @@ K8s API anonymous cluster-admin = full cluster control. docker.sock + RCE = host
 
 ---
 
-## OOB / Confirmation Gate (Read First)
+## OOB evidence check (supports Q3–Q5) (Read First)
 
 K8s findings are RCE/credential-disclosure class. House rule: **prove state change or data read, never infer from a status code.**
 
@@ -34,7 +34,7 @@ K8s findings are RCE/credential-disclosure class. House rule: **prove state chan
 - **10255 (read-only) vs 10250 (exec)** are constantly conflated. 10255 (HTTP, no auth) is info-disclosure only — it has `/pods`, `/stats`, `/metrics`, NO exec/run. 10250 (HTTPS) is where `/run` and `/exec` live. Do not report "kubelet RCE" off a 10255 hit.
 - **Blind/outbound vectors need OOB.** If you exploit SSRF→IMDS→K8s, or a pod's egress, confirm the outbound hop with a Burp Collaborator / interactsh subdomain (e.g. `curl http://<token>.<collab>` from inside the pod via `/run`). A delayed response or an echoed URL is NOT proof.
 - **Impact proof = the artifact.** For exec: the literal `id`/`hostname` output. For etcd/Secret: the decoded token bytes (redact in report). For docker.sock escape: the host file content (`/etc/hostname` of the node, distinct from the container's).
-- Use a **dedicated test namespace / test pod** when you have create rights; never exec into production workloads to "prove" RCE — list the pod and exec a read-only `id` in a pod you spun up if policy allows, or limit to a single non-destructive `id` and stop.
+- 可选用测试 namespace/pod 和非破坏性命令设计证据；实际操作按用户审批、数据与生产红线执行，不额外限制命令次数或限定仅实验环境。
 
 ---
 

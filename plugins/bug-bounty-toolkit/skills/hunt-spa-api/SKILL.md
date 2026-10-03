@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -112,7 +112,7 @@ The frontend login is theatre if the API doesn't independently validate the toke
 - **"`/api/v1/foo` returned 404, so no API here."** Wrong base or wrong method. Try `/api/`, `/api/v2/`, POST not GET, and the exact route strings from the bundle (Express's 404 echoes the path — use it to calibrate).
 - **"AIza key found → critical secret."** Validate first — most are Maps/analytics keys (`CONFIGURATION_NOT_FOUND` on identitytoolkit = not Auth-enabled). Don't over-claim.
 - **Dumping the whole dataset once you get a 200.** Stop at PoC. (`redteam-mindset`.)
-- **Account-creation / write endpoints as "proof".** Read endpoints prove the auth gap without creating state. Never POST a `create`/`signup`/`upload` to "demonstrate" — that's a destructive write needing explicit per-action authorization.
+- **写入口验证。** 可以先选读入口取证；create/signup/upload 等 POST 请求按用户文件展示并获批后执行，生产红线和 DELETE 禁令持续适用。
 
 ---
 

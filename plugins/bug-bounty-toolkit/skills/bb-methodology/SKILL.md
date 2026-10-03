@@ -5,7 +5,7 @@ metadata:
   sources: community, public_research
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # Bug Bounty Methodology: Workflow + Mindset
 
@@ -35,7 +35,7 @@ and reporting for confirmed findings plus explicit coverage gaps.
 | **Pentest** (signed SoW / WAPT) | Depends on SoW. Read scope explicitly. Usually accepts hygiene + impact + recon | Out-of-scope assets, unsigned testing |
 | **Internal audit** | Compliance-mapped findings (PCI / ISO / NIST / DPDPA / GDPR) | Findings without a control-mapping |
 
-**Hard rule:** Before Phase 0 runs, write the engagement type as the first line in your hunt notes. If you can't answer it from the user's instruction, ASK once. Don't assume — the mistake costs both you and the triager.
+可记录当前任务类型以选择研究方法；已知用户目的时直接推进，不增加进入前询问/确认门槛。
 
 **Lesson from an authorized engagement:** First-pass on this target produced 5 hygiene findings (SP2013 EoL, permissive CSP, stack traces) shipped in red-team format. The engagement was bug-bounty. Findings would have been N/A'd as "informational, no impact demonstrated." After the corrected pass with hygiene-as-context-not-finding, the same target yielded 11 impact-demonstrated bugs including 3 Critical.
 
@@ -404,63 +404,15 @@ Before pushing back with "I think we're done because X," do this:
 
 ---
 
-## PART 4: METHODOLOGY DISCIPLINE (False-Positive Prevention)
+## PART 4: 取证方法参考（供回答八问时选择）
 
-Most retracted findings come from four recurring process bugs. Each has a hard rule.
+- 反射或回调可使用容易区分的唯一标记，并与原始响应比较。
+- 权限验证可比较响应内容、状态变化、账号角色与资源归属，区别真实结果和单一状态码。
+- 时间差异可用交错对照和统计分布排查网络抖动；样本量与阈值按证据质量选择，没有固定 n≥10 或 2σ 的通过门槛。
+- 循环可使用 Python、PowerShell 或其他实际可用方式，记录请求及结果；不设超过五次必须使用 Python 的禁令。
+- 无立即影响证明的线索按用户价值与时间安排继续，有必要时申请加时；时间不足登记待续测表。
 
-> **Important framing:** These discipline rules are about *correctness of findings* — not throttling of effort. They tell you which signals are real findings and which aren't. They do **not** tell you to send fewer probes. If you find yourself using these rules to justify stopping early, you're misreading them — load `redteam-mindset` (DO NOT STOP primary directive) and continue. Coverage discipline and finding-correctness discipline are orthogonal axes; you need both on full.
-
-### Marker Discipline
-
-When testing for reflection, cache poisoning, parameter pollution, or OOB SSRF, the marker string you inject MUST be unique and unmistakable.
-
-**Rules:**
-- Markers are random alphanumeric strings, **8+ characters**, no English words, no protocol keywords.
-- **NEVER** use `test`, `marker`, `evil`, `attacker`, `payload`, `javascript`, `script`, `AAAA`, `BBBB`, your domain name, or any string that could plausibly appear naturally in the target's HTML/JS/error messages.
-- **Good markers:** `cpmark987abc`, `x4hd2k9pq`, a Collaborator subdomain prefix like `dlsrcurl.<collab>.oastify.com`, or `__ZZ_MARKER_<random>_ZZ__`.
-- Before claiming reflection: search the **baseline** (no-marker) response for the marker string. If it appears naturally, change your marker. This single check catches 80% of false-positive reflection reports.
-- For OOB testing, sub-tag each Collaborator payload (e.g., `dlsrcurl.<collab>`, `authsrc.<collab>`) so callbacks identify the specific sink that fired.
-
-**Lesson from an authorized engagement:** Initial scan flagged `X-Forwarded-Proto: javascript` as reflecting into multiple SharePoint pages. The "reflection" was the literal word `javascript` appearing naturally in SP help-link hrefs (`href="javascript:HelpWindowKey(...)"`). False positive caused by a non-unique marker.
-
-### Body-Diff Rule
-
-A bypass claim requires response **body** differential, not just status code.
-
-**Rules:**
-- 200 OK with byte-identical body to the baseline is NOT a bypass.
-- 200 OK with a 5-byte difference might be — verify what changed (correlation ID? timestamp? real content?).
-- Always diff the body side-by-side before claiming bypass: `diff <(curl ... baseline) <(curl ... bypass)`.
-- Status-code-only claims (e.g. "Host header X gave 200 instead of 403") are the most common rejected-as-N/A category on bug bounty platforms.
-
-**Lesson from an authorized engagement:** `Host: target.example:80@evil.example.com` returned HTTP 200 instead of the baseline 403. Looked like a Host-header bypass. But the body was byte-identical (8341 bytes both) — the AWS ELB normalised the Host to `target.example:80`, dropping the `@evil` portion. Not a bypass.
-
-### Statistical-Sample Rule (for timing-based claims)
-
-Single outliers are NOT signal. Network jitter routinely produces 2× outliers.
-
-**Rules for any user-enum / blind-SQLi / blind-NoSQLi / timing-side-channel claim:**
-- Minimum sample size: **n ≥ 10 INTERLEAVED trials per group** (control + test, randomised order, not back-to-back).
-- Compute mean, median, σ for each group.
-- A signal requires the suspect group's mean to be **≥ 2σ above** the control group's mean.
-- A single 2× outlier in n=1 testing is jitter, not signal.
-
-**Lesson from an authorized engagement:** Single-shot probe showed `Administrator` taking 1527 ms vs ~700 ms control on Authentication.asmx Login — looked like clear user-enum signal. Reproduction with n=80 interleaved trials across 8 groups collapsed every group to mean=685-716 ms, σ=25-74 ms. The 1527 ms was network jitter. Finding retracted.
-
-### Shell-Loop Ban (>5 iterations)
-
-For any iteration that runs more than 5 times, **use Python (with try/except per iteration), not shell for-loops.**
-
-**Why:** zsh array expansion fails silently on edge cases. A loop like `for x in "${arr[@]}"` can produce zero iterations with no error if the array wasn't populated by the previous command. The user sees output that looks complete but actually skipped the test entirely.
-
-**Rules:**
-- Loops of ≤5 hardcoded items in shell: OK.
-- Anything that iterates a list, file, or computed range: Python.
-- Always count results. If you expected 100 probes and got <50 lines of output, your loop ate something.
-
-**Lesson from an authorized engagement:** A zsh array-iteration verb-tampering test silently produced no curl invocations across 20+ iterations (zsh ate the array). Output looked like "HIT [GET] /_api/web → " repeated for every probe but the actual response was missing. ~50 probes worth of testing lost. Switching the test to Python with explicit per-iteration logging surfaced the real results.
-
----
+正式报告只回答统一八问，以上方法不组成独立验证门。
 
 ## Related Skills & Chains
 
@@ -484,7 +436,7 @@ The vendored 5-phase workflow is a checklist; real engagements are improvisation
 
 ### Mode-confirmation, in practice
 
-PART 0 (the bug-bounty vs WAPT vs red-team gate at the top of this file) is a hard rule, but the answer isn't always handed to you. Read the scope language:
+任务类型可帮助选择方法，类型判断不是额外进入门槛。参考用户目标与范围描述：
 
 - **"in-scope assets"** + **"out-of-scope assets"** + **"safe harbor"** → bug-bounty discipline. Validation-heavy, OOB-required, no exfil.
 - **"kill chain"** + **"objectives"** + **"flag capture"** + **"adversary emulation"** → red-team. Stealth, persistence, lateral movement valid.
@@ -513,7 +465,5 @@ When a candidate fails to reproduce, record the evidence gap at the 20-minute re
 
 ### The discipline rules are non-negotiable
 
-The discipline rules in this file — OOB Gate, Marker Discipline, Body-Diff Rule, Statistical-Sample Rule, Server-Policy-vs-State, Pre-Severity Gate, Shell-Loop Ban — are not methodology. They are quality gates. Methodology is the order of operations; these are the validation guarantees at each step.
-
-Verified across Phase 2D's hardened-lab campaign: 8/8 discipline rules fired correctly against fake-bug-shaped behavior (URL echo dressed as XSS, word collision dressed as reflection, status-code-only "bypasses" with byte-identical bodies, 200-OK leak-claims with no actual leak data). Validation rates fall sharply when these rules get skipped. The friction is the feature — if a rule feels obstructive, that's it doing its job. The findings it kills are the half that would have come back N/A anyway.
-- **`evidence-hygiene`** — When Phase 5 is collecting PoC screenshots / HARs. Workflow primitive: before any cookie / PII appears in a screenshot, hand off to `evidence-hygiene` for the redaction protocol.
+以上方法用于提高证据可读性和复现质量，采用何种技术根据八问缺口选择，不新增质量门槛。
+- **`evidence-hygiene`** — When Phase 5 is collecting PoC screenshots / HARs. Workflow primitive: evidence-hygiene offers optional capture and redaction methods.

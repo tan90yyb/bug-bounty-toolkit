@@ -6,13 +6,13 @@ metadata:
   sources: portswigger_research, ssl_labs_research, hstspreload_org
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-TLS-NETWORK — TLS/SSL & DNS Security
 
 ## Reality Check (Read First)
 
-Most findings in this class are **Info/Low and routinely rejected** as "best-practice" / "missing-hardening" by triage. This skill exists to stop you wasting a submission. Two questions before you report anything here:
+Most findings in this class are **Info/Low and routinely rejected** as "best-practice" / "missing-hardening" by triage. 相关影响与项目规则统一纳入八问 Q4/Q8；以下问题是可选取证参考：
 
 1. **Is there a real victim and a real action?** "Missing HSTS" is not a vulnerability — *demonstrated session-cookie capture from a victim you MitM'd* is. "Missing CAA" is never a vulnerability you can demonstrate.
 2. **Does the program accept it?** Many programs explicitly list missing SPF/DMARC, missing security headers, weak ciphers without exploit, and CAA as **out of scope**. Read scope first; quote the in-scope line in your report.
@@ -153,7 +153,7 @@ fi
 
 ### Spoofability is a RECEIVER decision, not a record-reading exercise
 
-Do not report "missing DMARC = email spoofing" from `dig` output alone. DMARC `p=none` (or absent) means the **sending domain published no enforcement** — but the **receiving** mail provider (Gmail, M365, the program's own MX) may still junk or reject your spoof based on SPF, its own heuristics, or ARC. The only proof that survives triage is a **message you delivered to a real inbox**.
+Do not report "missing DMARC = email spoofing" from `dig` output alone. DMARC `p=none` (or absent) means the **sending domain published no enforcement** — but the **receiving** mail provider (Gmail, M365, the program's own MX) may still junk or reject your spoof based on SPF, its own heuristics, or ARC. 可比较真实投递结果、邮件头与接收端策略以证明影响；按八问选择证据。
 
 ```bash
 # PROOF: send a spoofed mail and confirm INBOX delivery (use a tester account you own)
@@ -238,7 +238,7 @@ done < recon/$TARGET/ct-subdomains.txt | tee recon/$TARGET/cname-map.txt
 **Validation gate — a takeover claim requires you to actually claim it:**
 1. Confirm the dangling target is **unregistered/claimable** (the S3 bucket name is free, the Heroku app does not exist, etc.) — the provider error fingerprint alone is necessary but NOT sufficient.
 2. **Register the resource yourself** and serve a unique canary file, e.g. `https://$sub/<random>.txt` returning a string only you know. Screenshot it served over the victim subdomain with valid TLS.
-3. Tear it down immediately after PoC; never leave attacker-controlled content live on the target's domain.
+3. 记录验证后资源状态；后续操作按用户文件执行。
 
 Impact: cookie scope theft (cookies set for `.target.com`), OAuth `redirect_uri`/CORS-trust abuse, phishing on a trusted origin. Typically **High** (Critical if it sits at an OAuth/SSO redirect or shares session cookies).
 
@@ -338,15 +338,15 @@ curl -s "https://dmarcian.com/dmarc-inspector/?domain=$TARGET" 2>/dev/null
 
 ## Validation
 
-Each finding ships only with the proof listed — never the `dig`/header output alone.
+以下列出可选证据示例；取证不限定为这些方式，正式报告依照用户文件与八问。
 
 - **Subdomain takeover:** you registered the dangling resource and served a unique canary over `https://sub.target.com/` with valid TLS. Screenshot + canary string. (Tear down after.)
 - **mTLS bypass:** spoofed client-verify header returns *privileged* data/action that the cert-required path otherwise denies. Burp request/response pair.
 - **AXFR:** zone transfer returns internal hostnames/IPs from an authoritative NS. Full transcript.
-- **DMARC spoof:** swaks-sent mail with `From: @target.com` **delivered to a real Inbox** (not Spam), raw `Authentication-Results` headers attached. A bounce or Spam landing = no finding.
+- **DMARC spoof:** swaks-sent mail with `From: @target.com` **delivered to a real Inbox** (not Spam), raw `Authentication-Results` headers attached. 投递位置记录为实际结果；影响由八问判断。
 - **HSTS missing:** only reportable with a working downgrade PoC capturing a victim cookie over plaintext — otherwise it is best-practice noise.
 
-**Severity (conservative — matches the Chain Table):**
+**等级示例（实际等级按用户文件与八问 Q8 判断）：**
 - Subdomain takeover (claimed): High (Critical at OAuth/SSO redirect or shared session cookie)
 - mTLS bypass to authed functionality: High
 - AXFR returning internal hosts: Medium
@@ -355,4 +355,4 @@ Each finding ships only with the proof listed — never the `dig`/header output 
 - Weak cipher support without decrypt PoC: Info–Low
 - Missing security headers / missing CAA only: Info (usually do not file)
 
-**Pre-submission scope gate:** before filing ANY item here, confirm the program does not list it as out of scope (email-auth, missing-headers, weak-TLS-without-exploit, and CAA are commonly OOS). Quote the in-scope line in your report.
+**范围证据（八问 Q1/Q8）：** before filing ANY item here, confirm the program does not list it as out of scope (email-auth, missing-headers, weak-TLS-without-exploit, and CAA are commonly OOS). 记录用户规则中的资产范围依据。

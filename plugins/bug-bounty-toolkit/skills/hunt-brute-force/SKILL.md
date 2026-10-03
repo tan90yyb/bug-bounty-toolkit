@@ -6,7 +6,7 @@ metadata:
   report_count: 6
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-BRUTE-FORCE — Rate Limiting / Brute Force / Enumeration
 
@@ -123,7 +123,7 @@ done
 # 101 attempts with no 429/lockout → endpoint is a candidate. NOW run the shadow-throttle
 # seed test (above) before claiming "no rate limit". A clean probe is necessary, not sufficient.
 
-# ---- 2b. Full-keyspace impact proof (only with explicit authorization + your own account) ----
+# ---- 2b. Keyspace impact analysis (user workflow governs actual requests and production impact) ----
 # Severity rests on 10^6 being REACHABLE, not on 101 codes. Demonstrate tractability:
 #   - keyspace = 10^6 ; observed throughput from 2a (req/s) ; expected hit at ~half keyspace.
 #   - e.g. 50 req/s sustained → ~10^6 / 50 ≈ 5.5 hours worst case, ~2.8h expected. That IS the impact.

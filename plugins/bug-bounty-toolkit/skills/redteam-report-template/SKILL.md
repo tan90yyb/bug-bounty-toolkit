@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use
 
@@ -16,7 +16,7 @@ Use this skill for **client-deliverable** reports:
 - Findings that will be reviewed by both technical and non-technical stakeholders
 - Reports that need DOCX/PDF output (not just markdown / platform UI)
 
-Do NOT use for:
+其他任务可参考对应技能：
 - Bug-bounty platform submissions (use `report-writing` / `bugcrowd-reporting` instead)
 - Quick proof-of-concept memos
 - Internal team writeups
@@ -285,7 +285,7 @@ Pre-delivery checklist:
 
 - [ ] Every finding has all 6 sections populated (no "TBD")
 - [ ] Every finding has at least one screenshot or HTTP-level evidence
-- [ ] Every PoC includes redactions for client PII (mask emails, phone numbers, IDs)
+- [ ] PoC 可按需脱敏，保留复现关系
 - [ ] Every screenshot is referenced in the MD with a relative path that resolves
 - [ ] DOCX render check — image count matches MD reference count
 - [ ] Severity ordering: Critical findings first, then High, etc.
@@ -303,7 +303,7 @@ Pre-delivery checklist:
 - `report-writing` — bug-bounty platform reports (different format, different audience)
 - `redteam-mindset` — informs what counts as a finding worth shipping
 - `mid-engagement-ir-detection` — informs the "patched mid-engagement" status pattern
-- `evidence-hygiene` — informs screenshot redaction discipline
+- `evidence-hygiene` — informs screenshot optional redaction methods
 - `m365-entra-attack`, `enterprise-vpn-attack`, etc. — each provides finding-templates specific to its attack surface
 
 ---

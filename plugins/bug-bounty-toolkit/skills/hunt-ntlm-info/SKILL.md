@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## Crown Jewel Targets
 
@@ -212,23 +212,9 @@ For the attacker: there's no "bypass" needed — the leak is the finding.
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-Before writing the report, confirm:
-
-1. **What can the attacker do RIGHT NOW with this disclosure?**
-   - Internet-exposed + default hostname + corporate forest disclosed → **Medium**: attacker has UPN format for `hunt-auth-bypass` matrix probes, plus knows server has likely-default service accounts.
-   - Intranet-only or only NetBIOS name → **Informational**.
-
-2. **Does the program accept information-disclosure findings without a chained impact?**
-   - Many programs (Microsoft, large enterprise VDPs) DO accept this when the leaked info includes internal AD topology.
-   - Many programs (Shopify, GitHub) reject info disclosure without a chained impact.
-   - Read the program scope before submitting; if borderline, chain with a Tier-A finding from `hunt-auth-bypass`.
-
-3. **Can you reproduce in <5 minutes from a fresh shell?**
-   - The Python snippet above is the canonical reproduction. Include it verbatim in the report.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Real Impact Examples
 
@@ -270,4 +256,4 @@ Target: `https://intranet.corp.example` (clearly internal, behind VPN). Type-1 r
 - **`m365-entra-attack`** — Leaked NetBIOS domain + UPN suffix is the missing piece for a credible password spray. Chain primitive: NTLM Type-2 yields `corp.example.com` DNS tree → cross-reference Entra tenant via `https://login.microsoftonline.com/corp.example.com/.well-known/openid-configuration` → `m365-entra-attack` AADSTS error-differential username enumeration on resolved tenant.
 - **`hunt-aspnet`** — IIS sites running ASP.NET frequently expose NTLM on management paths. Chain primitive: NTLM Type-2 on `/owa/`, `/ecp/`, `/rpc/`, `/aspnet_client/` → confirm IIS + ASP.NET version → `hunt-aspnet` ViewState / `.axd` enumeration on same host.
 - **`offensive-osint`** — The hostname pattern `WIN-XXXXXXXXXXX` signals lazy provisioning and predicts other weak hygiene. Chain primitive: NTLM Type-2 returns default-installer hostname → flag as low-maturity environment → `offensive-osint` deep recon (cert transparency, GitHub leakage, breach corpus correlation) is high-yield on this org.
-- **`triage-validation`** — Most NTLM info-disclosure findings die at the 8-Question Gate on "is this exploitable" — pure topology disclosure is Low/Informational. Chain primitive: pull every NTLM-info finding through `triage-validation` BEFORE writing it up; only report if (a) leaks UPN format that accelerates spray, or (b) leaks production hostname mapping (`redteam-report-template` for the chain-narrative).
+- **`triage-validation`** — Most NTLM info-disclosure findings die at the 8-Question Gate on "is this exploitable" — pure topology disclosure is Low/Informational. Chain primitive: pull every NTLM-info finding through `triage-validation` BEFORE writing it up; 可研究 UPN、拓扑与实际业务影响，报告结论统一由八问决定；例： (`redteam-report-template` for the chain-narrative).

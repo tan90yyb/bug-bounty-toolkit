@@ -27,7 +27,7 @@ Most recon generalizes; some sectors have unique attack-surface elements worth f
 
 ### 47.3 ICS / SCADA / OT
 
-> **Caution:** ICS/SCADA assets often run on legacy systems where even passive scanning can cause disruption. **Do not actively probe ICS without explicit RoE coverage and operator coordination with the OT team.**
+
 
 - **Modbus** — port 502 (TCP).
 - **BACnet** — port 47808 (UDP).

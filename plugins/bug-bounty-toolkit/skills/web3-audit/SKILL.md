@@ -5,7 +5,7 @@ metadata:
   sources: public_research, community
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # WEB3 SMART CONTRACT AUDIT
 
@@ -13,27 +13,9 @@ metadata:
 
 ---
 
-## PRE-DIVE KILL SIGNALS (check BEFORE any code review)
+## 研究投入参考
 
-> ZKsync lesson: $322M TVL + OZ audit + 750K LOC + 5 sessions = 0 findings. Large well-audited bridges are extremely hard.
-
-1. **TVL < $500K** → max payout capped too low for effort
-2. **2+ top-tier audits** (Halborn, ToB, Cyfrin, OpenZeppelin) on simple protocol → bugs already found
-3. **Protocol < 500 lines, single A→B→C flow** → minimal attack surface
-4. **Formula**: `max_realistic_payout = min(10% × TVL, program_cap)` — if < $10K, skip
-
-**Soft kill:** OZ/ToB/Cyfrin audit on current version + codebase > 500K LOC → expect 40+ hours for maybe 1 finding. Only proceed if bounty floor > $50K AND you have protocol-specific expertise.
-
-**Target scoring (go if >= 6/10):**
-- TVL > $10M: +2
-- Immunefi program with Critical >= $50K: +2
-- No top-tier audit on current version: +2
-- < 30 days since deploy: +1
-- Protocol you've hunted before: +1
-- Source code + natspec comments: +1
-- Upgradeable proxies: +1
-
----
+TVL、既有审计、代码规模和历史奖金可帮助估算研究投入。站点/项目优先级与时间按用户文件执行，不设置 TVL、奖金或评分的强制进入门槛。
 
 ## THE ONE RULE
 

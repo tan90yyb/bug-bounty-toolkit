@@ -6,7 +6,7 @@ metadata:
   sources: hackerone_public
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-JWT-CRYPTO — Forgeable JSON Web Tokens (A04 Cryptographic Failures)
 
@@ -148,7 +148,7 @@ admin-only page and perform an admin action, e.g. delete a user). Once any forge
 is accepted, IMMEDIATELY escalate — change identity to admin AND aim at the admin
 endpoint. Do not keep re-forging `/my-account` or re-logging-in; that is drift.
 
-Fixed escalation sequence (run it in order, do not loop on earlier steps):
+可参考的权限验证顺序（按线索选择，不强制固定顺序）：
 
 1. Forge admin identity and hit the admin page (try these claim names — match a
    decoded real token: `sub`, `role`, `isAdmin`, `username`), e.g. an HS256 token
@@ -160,7 +160,7 @@ Fixed escalation sequence (run it in order, do not loop on earlier steps):
    use `POST /admin/delete` — read the admin page for the exact form/verb).
 
 A 401 on `/admin` means the forge/claim is wrong — change ONE thing (the kid
-depth, the claim name/value, or alg) and retry `/admin`. Never retreat to a bare
+depth, the claim name/value, or alg) and retry `/admin`. 可继续比较不同权限入口，避免仅停留在
 unauthenticated `GET /admin` (no token) — that always 401s and wastes effort.
 
 ## Proof of impact

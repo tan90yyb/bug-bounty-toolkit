@@ -1,12 +1,12 @@
 ---
 name: supply-chain-attack-recon
-description: "External recon for software supply-chain attack surface — package-namespace squatting candidates, dependency-confusion vulnerabilities, GitHub Actions injection openings, container image registry exposure, SBOM mining, internal-package-name leakage, and CI/CD configuration exposure. Reconnaissance and identification ONLY — actual package publishing / typosquat attacks are EXTERNAL-OFFENSIVE and require explicit written sign-off because they can affect the entire npm/PyPI ecosystem. Use when the target has a public GitHub org, when their build artifacts/SBOMs are reachable, when their docker images are on Docker Hub/GHCR, or when you find internal package names in their JS bundles."
+description: "External recon for software supply-chain attack surface — package-namespace squatting candidates, dependency-confusion vulnerabilities, GitHub Actions injection openings, container image registry exposure, SBOM mining, internal-package-name leakage, and CI/CD configuration exposure. Covers reconnaissance and identification; actual operations follow the shared user workflow. Use when the target has a public GitHub org, when their build artifacts/SBOMs are reachable, when their docker images are on Docker Hub/GHCR, or when you find internal package names in their JS bundles."
 metadata:
   sources: alex-birsan-dependency-confusion, supply-chain-research, github-actions-security, cisa-advisories, mandiant-tag, github-security-blog, snyk-research
   report_count: 12
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use
 
@@ -19,9 +19,9 @@ Trigger when:
 - Findings include `npmrc`/`pip.conf`/`gradle.properties` with internal registry URLs
 - `.github/workflows/*.yml` files reference internal tooling
 
-Do NOT use for:
+其他任务可参考对应技能：
 - Internal-network artifact registries (out of scope per external boundary)
-- Actually publishing typosquats / dep-confusion packages without explicit OK
+- 发布等操作按用户范围、方法审批与生产红线安排
 - Compromising upstream open-source projects (massive blast radius — illegal in most jurisdictions without authorization)
 
 ---
@@ -180,7 +180,7 @@ for candidate in ...; do
 done
 ```
 
-**⚠ EXTERNAL-OFFENSIVE NOTE:** publishing a typosquat package to a public registry is an attack on the wider ecosystem. NEVER do this without explicit, written, scope-clarified sign-off. It can affect users outside your engagement and may be illegal.
+按用户文件执行范围、方法审批、时间安排、数据上限和生产红线。
 
 ---
 
@@ -419,11 +419,11 @@ Reference: polyfill.io was compromised in 2024 to serve malicious payloads. Pres
 
 ## Anti-patterns
 
-- **DO NOT publish a typosquat / dep-confusion package without explicit, signed, scope-clarified authorization** — this affects users outside the engagement
-- **DO NOT submit PRs to client repos as part of testing without specific OK** — workflow injection PoCs may be needed but they touch CI/CD and other developers
-- **DO NOT scrape entire npm/PyPI for typosquat candidates** — irresponsible and noisy
+
+
+
 - **DO NOT confuse "name is unclaimed" with "exploitable dependency confusion"** — the build system matters; many orgs use proper scope-mapping that prevents the attack
-- **DO NOT touch GitHub Actions self-hosted runners** — they may be inside the client network and outside the external scope
+
 - **DO NOT pull large Docker images blindly** — image bandwidth can be 5-50GB; review tags first
 
 ---
@@ -452,7 +452,7 @@ A supply-chain finding needs ALL of:
 
 ## External-only boundary check
 
-This skill is squarely external — all targets are public registries / public GitHub. If the engagement involves the client's internal artifact registry (internal Nexus, JFrog, Sonatype), that is internal infrastructure and OUT OF SCOPE per `feedback_skill_boundaries`. Report internal-registry URL exposure as a finding; do not attempt to enumerate it.
+This reference primarily covers public registries and public GitHub. Internal registries follow the user-provided scope and method rules; they are not automatically excluded by an absent memory reference. Record inaccessible or unconfirmed registry assets as blocked/pending and route allowed work to the relevant skill. Exposure of a URL alone is a lead, not a confirmed vulnerability.
 
 ---
 
@@ -589,7 +589,7 @@ Twelve well-documented public cases, mapped to the recon surface above. Each ent
   - Snyk colourama / pytagora analysis: https://snyk.io/blog/malicious-packages-found-to-be-typo-squatting-in-pypi/
   - Phylum 2024 typosquat report: https://blog.phylum.io/the-state-of-the-software-supply-chain/
   - Sonatype 2024 State of the Software Supply Chain (>700K malicious packages found): https://www.sonatype.com/state-of-the-software-supply-chain/
-- **Recon takeaway:** Step 5 of the skill (typosquat candidate generation) maps directly here. For external recon, you LIST candidate typosquat names — you NEVER publish unless explicitly authorized. The deliverable is "these 17 typosquat variants of your top deps are currently unclaimed; recommendation: register them defensively."
+- **Recon takeaway:** Step 5 of the skill (typosquat candidate generation) maps directly here. For external recon, you LIST candidate typosquat names — 实际验证遵循用户工作流。 The deliverable is "these 17 typosquat variants of your top deps are currently unclaimed; recommendation: register them defensively."
 
 ### 11. Alex Birsan dependency-confusion disclosure (Feb 2021)
 
@@ -648,4 +648,4 @@ Twelve well-documented public cases, mapped to the recon surface above. Each ent
 - **`cloud-iam-deep`** — CI runners have IAM credentials; supply-chain RCE there is a credential-exfil bonanza. Chain primitive: malicious package executes on GitHub Actions runner → reads `$AWS_ACCESS_KEY_ID` / `$GITHUB_TOKEN` from env → `cloud-iam-deep` enumeration → IAM-privilege-escalation chain → production cloud-plane access.
 - **`offensive-osint`** — Recon discipline overlaps heavily; SBOMs, JS bundles, GitHub org enumeration, Docker registry tags all live in both. Chain primitive: `offensive-osint` GitHub-org recon yields internal package names referenced in CI workflows → `supply-chain-attack-recon` cross-references these against public npm/PyPI for typosquat/confusion candidates.
 - **`hunt-cloud-misconfig`** — Container registries (Docker Hub, GHCR, ECR public) frequently expose private images by accident. Chain primitive: SBOM mining reveals `internal-tools-v2:latest` referenced → check Docker Hub for accidentally-public mirror → `hunt-cloud-misconfig` registry enum → pull image → extract secrets baked into layers.
-- **`triage-validation`** + **`redteam-report-template`** — Supply-chain RECON is in scope; actual publishing is EXTERNAL-OFFENSIVE and needs explicit written sign-off. Chain primitive: recon-only candidate list assembled → run through `triage-validation` 8-Question Gate (specifically: "can I demonstrate impact WITHOUT publishing?") → report as "dependency-confusion candidate inventory + reproduction steps" via `redteam-report-template`, never as a published-package PoC unless client signed off in writing.
+- **`triage-validation`** + **`redteam-report-template`** — 实际操作按用户范围、方法审批、数据和生产规则执行；将证据用于统一八问，未完成项保留待续测状态。

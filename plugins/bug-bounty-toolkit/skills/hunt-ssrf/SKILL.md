@@ -1,12 +1,14 @@
 ---
 name: hunt-ssrf
-description: "Hunting skill for ssrf vulnerabilities. Built from 15 public bug bounty reports including AWS metadata SSRF (HackerOne $25k Analytics PDF, Shopify Exchange $25k, Capital One 106M-record breach, Dropbox/HelloSign $4,913), GCP metadata SSRF (Snapchat $4k), Azure IMDS SSRF (Azure DevOps $15k chain, ChatGPT Custom Actions MSRC), DNS rebinding SSRF (Concrete CMS, GitLab UrlBlocker), gopher-protocol-to-Redis-RCE (Yahoo Mail $15k), link-preview SSRF (Reddit Matrix $6k), and headless-browser PDF-generator SSRF chains. Use when hunting SSRF on any target — OOB Collaborator confirmation mandatory for blind cases."
+description: "Hunting skill for ssrf vulnerabilities. Built from 15 public bug bounty reports including AWS metadata SSRF (HackerOne $25k Analytics PDF, Shopify Exchange $25k, Capital One 106M-record breach, Dropbox/HelloSign $4,913), GCP metadata SSRF (Snapchat $4k), Azure IMDS SSRF (Azure DevOps $15k chain, ChatGPT Custom Actions MSRC), DNS rebinding SSRF (Concrete CMS, GitLab UrlBlocker), gopher-protocol-to-Redis-RCE (Yahoo Mail $15k), link-preview SSRF (Reddit Matrix $6k), and headless-browser PDF-generator SSRF chains. Use when hunting SSRF on any target — OOB callbacks are one available evidence method for blind cases."
 metadata:
   sources: github, hackerone_public, portswigger_research, binarysecurity_research
   report_count: 34
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+技术示例服从用户工作流：密码修改、退出/登出、破坏生产及批量提取不执行。登录与认证入口本身可测试；正常登录沿用审批豁免。需要真实数据时读取[去重计数规则](../bug-bounty/references/real-records.md)，同一漏洞最多 5 条不同真实记录，重复不计数；攻击链中违反边界的操作只记录未执行步骤，用测试数据或其他证据核对。
 
 ## Crown Jewel Targets
 
@@ -23,7 +25,7 @@ Payouts are highest when SSRF reaches: cloud credentials → account takeover, i
 
 ---
 
-## OOB-Or-It-Didn't-Happen Gate (Read First)
+## OOB evidence check (supports Q3–Q5) (Read First)
 
 **Claims of blind SSRF require an out-of-band (OOB) confirmation. Always. No exceptions.**
 
@@ -52,8 +54,8 @@ OOB means: a Burp Collaborator domain, an `interactsh-client` listener, a canary
    parameter** and send exactly one request per payload.
 2. **Send the request** to the target endpoint.
 3. **Wait 30–120 seconds**, then poll the OOB listener.
-4. **Only after a confirmed callback** do you claim SSRF.
-5. If zero callbacks across all sub-tagged sinks: SSRF claims must be retracted, even if error messages echo URLs.
+4. 将回调、内网响应或其他因果证据用于八问，证明服务端实际请求行为。
+5. 无回调时记录当前证据缺口；根据网络、回调可见性和时间安排继续研究，不把无回调自动当作已证伪。URL 回显本身不证明 SSRF。
 
 **Lesson from a authorized engagement:** SharePoint's `/_layouts/15/download.aspx?SourceUrl=` returned 500 with the title `"The Web application at <attacker-URL> could not be found"`. Initial scan flagged this as SSRF (server clearly processed the URL). 38 Collaborator-tagged payloads across 12+ URL-accepting parameters yielded **zero DNS or HTTP interactions**. The "echo" was client-side error-string formatting; the server never made an outbound HTTP request. The path is actually an SP-internal `SPFile`/`SPWebApplication` resolver, not a generic URL fetcher. Reporting this as SSRF would have been N/A'd at triage.
 
@@ -90,7 +92,7 @@ the client to patch a field that does nothing.
 After a callback confirms the request leaves the server, **check whether the
 upstream response body is returned to you.** These are different findings:
 
-- **Blind** (callback only, no body): on the never-submit list standalone. Needs an
+- **Blind** (callback only, no body): on the user workflow and eight-question evidence standalone. Needs an
   internal service reached, or data returned, to be reportable.
 - **Full-read** (upstream body in the response): substantially higher severity —
   read arbitrary internal endpoints directly.
@@ -432,28 +434,9 @@ http://169.254.169.254:80@evil.com/
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-Before writing the report, confirm all three:
-
-1. **What can the attacker DO right now?**
-   - Can you retrieve a response proving internal network access? (Show the metadata token, internal API response, or confirmed DNS callback)
-   - If blind: can you demonstrate port differentiation or confirmed OOB callback tied to a specific internal address?
-   - "The server makes a request" alone is insufficient — show *where* it goes and *what comes back*.
-
-2. **What does the victim LOSE?**
-   - Cloud credentials (IAM tokens) → full cloud account compromise?
-   - Internal service data (user PII, secrets, API keys)?
-   - Ability to pivot to RCE via internal admin service?
-   - If the answer is only "the server fetches my URL," severity is low — quantify the actual reachable blast radius.
-
-3. **Can it be reproduced in 10 minutes from scratch?**
-   - Is the vulnerable endpoint still live and the parameter still present?
-   - Does your callback server show the hit reliably (not intermittently)?
-   - Can a second person follow your steps without prior knowledge and get the same result?
-   - If reproduction requires specific timing, tokens, or luck — resolve the flakiness before submitting.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Real Impact Examples
 
@@ -514,4 +497,4 @@ The following real, verified bug-bounty / coordinated-disclosure cases extend th
 - **`hunt-rce`** — Internal Redis/Memcached are unauthenticated by default and reachable via gopher://. Chain primitive: SSRF + Gopher → internal Redis `CONFIG SET dir` + RCE via cron / SSH authorized_keys write.
 - **`hunt-cloud-misconfig`** — Internal-only buckets/APIs become reachable through SSRF egress. Chain primitive: SSRF + DNS rebinding → SSRF-protected-endpoint bypass → internal /admin or private S3 bucket read.
 - **`security-arsenal`** — Load the SSRF IP Bypass Table (11 techniques: decimal IP, IPv6 mapped, octal, suffix dot, DNS rebinding, redirect chain, etc.) before testing filters.
-- **`triage-validation`** — Apply the OOB-Or-It-Didn't-Happen gate: every blind SSRF claim requires a Burp Collaborator hit with a unique marker before report submission.
+- **`triage-validation`** — Apply the OOB evidence example gate: every blind SSRF claim requires a Burp Collaborator hit with a unique marker before report submission.

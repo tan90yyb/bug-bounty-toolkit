@@ -6,7 +6,7 @@ metadata:
   report_count: 3
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## Crown Jewel Targets
 
@@ -86,7 +86,7 @@ Subdomain takeover is high-value because it allows an attacker to serve content 
    - UserVoice/Zendesk/WordPress: visit registration URL
    - Fastly: check if origin hostname is unregistered
 
-6. **Claim the resource** (only enough to prove control — do NOT serve malicious content):
+6. **Claim the resource**：按用户范围、请求审批与生产红线设计控制权证据：
    - Create a minimal index page with your HackerOne username and a timestamp
    - Take screenshot showing your content served on `subdomain.target.com`
 
@@ -202,23 +202,9 @@ dig CNAME sub.target.com
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-1. **What can the attacker DO right now?**
-   Can you register the unclaimed resource (GitHub repo, S3 bucket, Heroku app, UserVoice account) and serve arbitrary content — including phishing pages, credential harvesters, or malicious scripts — under the target's trusted domain name?
-
-2. **What does the victim LOSE?**
-   Users lose trust and safety: they see a company-branded URL serving attacker content. The company loses brand integrity, potentially leaks session cookies if the subdomain is in `domain=.target.com` scope, and may have OAuth/SSO flows hijacked. Depending on CSP configuration, XSS against the main application may be possible.
-
-3. **Can it be reproduced in 10 minutes from scratch?**
-   - `dig CNAME subdomain.target.com` → confirms CNAME to provider
-   - `curl -sk https://subdomain.target.com` → confirms provider error string
-   - Visit provider registration page → confirms namespace is available
-   - Screenshots of all three steps = reproducible in under 10 minutes
-
-If you cannot show the provider resource is *currently unclaimed and claimable*, it is not a valid report.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Real Impact Examples
 

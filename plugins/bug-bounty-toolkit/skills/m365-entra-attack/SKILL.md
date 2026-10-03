@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -17,7 +17,7 @@ Trigger when:
 - You see `*.onmicrosoft.com`, `*-my.sharepoint.com`, `enterpriseregistration.*`, `enterpriseenrollment.*` in recon
 - Client mentions "Conditional Access", "MFA bypass", "compliant device"
 
-DO NOT use for:
+其他任务可参考对应技能：
 - On-prem-only Active Directory (use a separate AD-attack skill)
 - Service-to-service token attacks (different threat model)
 - Phishing-required attack chains (covered by phishing skills) — but you can prep for the credential-validation step here
@@ -64,21 +64,9 @@ Key fields in output:
 
 ---
 
-## Smart Lockout math (the cap discipline)
+## Smart Lockout 技术参考
 
-**Microsoft default policy:**
-- 10 failed sign-ins in 10 minutes → 1-minute lockout
-- 20 failed sign-ins → progressively longer lockouts (exponential backoff)
-- Counter shared across **ALL auth flows** (ROPC + SAML + IMAP + EWS + SMTP + device-code)
-
-**Engagement discipline:**
-- Hard cap: ≤2 password attempts per user **lifetime per engagement** (some engagements: 1)
-- State file with atomic writes — never let two test runs race the counter
-- Kill switch: stop run if more than N LOCKED responses observed (suggests pre-existing attacker activity OR you miscounted; either way pause)
-
-**Mathematical guarantee:** with 1 attempt per user, **you cannot cause Smart Lockout** (1 < 10). Any AADSTS50053 you see is therefore pre-existing → use this for active-attacker detection (see `mid-engagement-ir-detection` skill).
-
----
+账号锁定策略、失败次数与历史尝试会影响返回结果；按目标实际配置区分账号锁定和 IP 拒绝。研究不另设每账号一/两次的统一硬上限，也不声称一次尝试保证不会锁定。用户文件的不破坏生产、不做 DoS 和请求审批要求继续适用。
 
 ## User enumeration — vectors + hardening status (May 2026)
 
@@ -159,18 +147,15 @@ The OneDrive-404 + ROPC-50126 combination is **the signal for "functional accoun
 
 ## ROPC password validation (the canonical test)
 
-**Single-attempt validator pattern (Python):**
+**ROPC 请求构造与结果解析示例（实际请求按用户规则）：**
 
 ```python
 import urllib.request, urllib.parse, ssl, time, json, os
 ctx = ssl.create_default_context(); ctx.check_hostname=False; ctx.verify_mode=ssl.CERT_NONE
 ATTEMPT_FILE = "engagement_log/o365_attempts.json"
-HARD_CAP = 1  # or 2 — never higher
 
 def attempt(email, password):
     state = json.load(open(ATTEMPT_FILE)) if os.path.exists(ATTEMPT_FILE) else {}
-    if state.get(email.lower(), 0) >= HARD_CAP:
-        return {"status": "SKIPPED_CAP"}
     body = urllib.parse.urlencode({
         "resource": "https://graph.windows.net",
         "client_id": "1b730954-1685-4b74-9bfd-dac224a7b894",  # Microsoft Graph PowerShell
@@ -231,11 +216,11 @@ When CA policy requires MFA and ROPC cannot satisfy it, Entra returns an error b
 The `claims.access_token.capolids` values are tenant-internal Conditional Access policy IDs — useful recon enrichment, but NOT a token. Document them in engagement notes as "CA policy IDs that fired" — they're a defender-side breadcrumb, not an attacker-side win.
 
 **Pace:**
-- **NEVER use concurrency. Single-threaded, serial, paced. This is a hard rule, not a tuning knob.** Entra has an IP-reputation anti-spray layer that is SEPARATE from per-user Smart Lockout. Concurrency — not attempts-per-user — is what trips it. Once tripped it returns `AADSTS50053` (LOCKED) en masse for accounts you hit only once (mathematically impossible to be real per-user locks → they are IP-level rejections), which (a) **contaminates your existence data** — 50053 is now ambiguous and you've burned the 1/user cap so you can't re-test — and (b) **flags your egress IP as a spray source** in the tenant. Observed live on an authorized engagement: switching from serial to 12 threads produced ~183 false `AADSTS50053` in 15s vs. 1 across 454 paced attempts.
-- The earlier "≤30 req/sec is fine" guidance is MISLEADING for a real tenant — read it as "serial with 1.5–3s jitter," never as "parallelize up to 30/s."
-- Per-user: hard cap from state file is the only thing that matters for lockout-causation; serial pacing is what matters for IP reputation.
+- 并发与间隔可结合目标锁定策略和 IP 风控调整；串行通常更便于区分返回结果。具体操作按用户审批和生产红线执行。
+- 可参考串行与间隔的观测方式；具体请求频率按实际目标和用户规则选择。
+- 按账号记录历史尝试并区分账号锁定与 IP 风控；不使用固定尝试次数推导锁定不会发生。
 - Random jitter (1.5–5s between attempts) for less-machine-like signature.
-- **Kill-switch:** if >~5 `AADSTS50053` appear in a run where your cap is 1/user, STOP — you've either tripped IP anti-spray (your fault, pace down / rotate IP / wait for cooldown) or detected a real external spray (a finding). Either way, pause and diagnose before continuing.
+- AADSTS50053 聚集时分析账号状态、IP 风控和历史尝试，按用户规则决定下一步，不设置固定五次自动停机。
 
 ---
 
@@ -358,9 +343,9 @@ For the report:
 
 ## Anti-patterns (don't do these)
 
-- **DON'T use the leaked cred for the user across multiple resources** — burns the cap with no marginal benefit when CA blocks all paths
-- **DON'T retry after AADSTS50053** — account is locked, you'll just see lockout again
-- **DON'T parallelize ROPC/auth requests AT ALL** — serial + paced only. Concurrency trips Entra's IP-reputation anti-spray (separate from Smart Lockout), floods false `AADSTS50053`, contaminates results, and flags your IP. "Going faster" by adding threads costs more than it saves. The only safe speed-up is removing dead/nonexistent users first (small `GetCredentialType` batches <60), not raising concurrency.
+- 跨资源验证可用于分析权限差异；沿用用户范围、数据上限和生产红线。
+- AADSTS50053 可表示锁定或 IP 风控，先核对实际状态；下一步按用户规则选择。
+- 串行可降低结果污染；并发不是本技能独立禁令，研究按用户操作与生产规则执行。
 - **DON'T forget to test ALL Entra tenants** — sister domains often have separate tenants with different password policies
 - **DON'T retract a CA-block finding** — AADSTS53003 means the password is correct; that's the whole point
 

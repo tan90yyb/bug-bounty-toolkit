@@ -6,7 +6,7 @@ metadata:
   report_count: 18
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-CICD — CI/CD Pipeline Security
 
@@ -25,7 +25,7 @@ Jenkins `/script` console reachable = immediate RCE. A GitHub Actions `pull_requ
 
 ---
 
-## "It-Didn't-Happen-Without-Proof" Gate (Read First)
+## Execution evidence checks (supports Q3–Q5) (Read First)
 
 CI/CD findings are over-reported because dashboards *look* exploitable. Before claiming anything:
 
@@ -101,11 +101,11 @@ jobs:
       - run: echo "Building PR ${{ github.event.pull_request.title }}"   # ← ${{ }} INJECTION
 ```
 
-**Safe validation of the `${{ }}` sink** — never print or exfiltrate a real token or secret. Prefer static data-flow proof. In an isolated repository controlled by the owner, use only a deliberately planted dummy canary and a benign fixed marker:
+**Validation of the `${{ }}` sink** — 可先使用静态数据流和合成 canary 设计验证；实际请求、数据和生产影响按用户文件执行。示例：
 ```
 PR title:  a"; echo "CODEX_CI_CANARY"; echo "
 ```
-Do not use a real repository secret, write-capable token, external exfiltration endpoint, or production workflow as the proof mechanism. Record the unexecuted secret-exposure path in the report.
+实际验证采用用户文件允许的操作；证据尚未完成时记录缺口，正式报告由八问决定。
 
 **Attack via a poisoned checkout (no `${{ }}` needed)** — if `pull_request_target` checks out the PR head and then runs a build script / installs deps from the checked-out tree (`make`, `npm ci` with a malicious `preinstall`, a Makefile, a `.github/` action in the PR), the *runner executes attacker code directly*. Drop into any build hook:
 ```bash
@@ -251,7 +251,7 @@ trufflehog docker --image ORG/IMAGE:latest --only-verified
 
 - **Jenkins console:** the `scriptText` POST returns your `id` output (`uid=…(jenkins)`). A returned login/SSO/Crowd page = **not** anon access. Screenshot the request+response.
 - **CVE-2024-23897:** response contains real `/etc/passwd` content; confirm version is in range. Patched instances return an error with no leaked line.
-- **Actions injection:** confirm the data flow into a sink first (FP section). Blind step → **Collaborator callback with the runner's source IP** is mandatory. Token exfil via `printenv`/`/proc/self/environ` decoded at your endpoint — never `cat $GITHUB_TOKEN`.
+- **Actions injection:** confirm the data flow into a sink first (FP section). 盲执行可使用回调或其他能证明因果的结果，不要求固定回调方式。 Token exfil via `printenv`/`/proc/self/environ` decoded at your endpoint — never `cat $GITHUB_TOKEN`.
 - **OIDC abuse:** `aws sts get-caller-identity` from your controlled workflow returns the privileged role ARN — not just a permissive-looking trust policy.
 - **Terraform state:** `jq` extraction yields ≥1 *live* secret, then a read-only auth proves it. ID/ARN-only state = no finding.
 - **Runner token / image / logs:** demonstrate the secret authenticates (trufflehog `--only-verified`, or a real API call) — possession of a string is not impact.

@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -17,7 +17,7 @@ Trigger when:
 - Customer-facing app, dealer/partner portal, or employee mobile companion app is in scope
 - Bug bounty program lists Android in scope
 
-DO NOT use for:
+其他任务可参考对应技能：
 - iOS-only targets (different pipeline — IPA reverse, MobSF, frida-ios-dump)
 - React Native / Flutter web apps already covered by JS bundle analysis
 - Server-side only assessments
@@ -383,7 +383,7 @@ download-apk() {
 - `offensive-osint` — Play Store / APKMirror enum is part of broader OSINT
 - `hunt-cloud-misconfig` — Firebase public-read is exactly this skill's specialty post-discovery
 - `hunt-api-misconfig` — JWT manipulation once you have the algorithm + sample token
-- `evidence-hygiene` — extracted secrets need redaction before report inclusion
+- `evidence-hygiene` — extracted secrets may be redacted while preserving reproducibility
 - `redteam-mindset` — APK reverse on day-1 of an engagement, not as an afterthought
 
 ---

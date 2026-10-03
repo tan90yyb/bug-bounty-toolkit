@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -19,7 +19,7 @@ Trigger when:
 - Lockout / error rates change between test windows (especially LOCKED count for credential attacks)
 - Engagement is "assume breach" or "white box" — client knows you're testing
 
-DO NOT use for:
+其他任务可参考对应技能：
 - Bug bounty (client doesn't know you're there; no real-time IR)
 - Pure recon (no state-change happening)
 - One-off vulnerability scanning (no temporal dimension)
@@ -298,7 +298,7 @@ echo "$(date -u +%FT%TZ) lockout_count $LOCK_COUNT" >> lockout_history.log
 
 If a confirmed-vulnerable finding stops reproducing:
 
-1. **DO NOT delete the original PoC.** Original timestamps + payloads + response captures are forever.
+1. 可保留原始时间线、请求与响应用于比较；证据保存位置与期限按用户文件执行，不要求永久保留。
 2. **Capture the new state in detail.** What's the recheck response? What's different?
 3. **Try at least 3 alternative vectors** before declaring "indeterminate".
 4. **If none restore the signal**, document as "vulnerability confirmed at T0, mitigation observed at T0+<delta>, mitigation depth: [WAF | code]".

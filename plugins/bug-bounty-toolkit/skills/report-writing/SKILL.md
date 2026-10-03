@@ -1,11 +1,11 @@
 ---
 name: report-writing
-description: "Bug bounty report writing for H1/Bugcrowd/Intigriti/Immunefi — report templates, human tone guidelines, impact-first writing, CVSS 3.1 scoring, title formula, impact statement formula, severity decision guide, downgrade counters, pre-submit checklist. Validation gates and the submittability/always-rejected decision are owned by triage-validation; this skill owns the written report itself (templates, tone, formulas). Use after validating a finding and before submitting. Never use \"could potentially\" — prove it or don't report."
+description: "Write reproducible bug bounty reports with platform templates, clear impact explanations and severity reasoning. Formal reports use the shared eight questions; incomplete candidates remain research notes."
 metadata:
   sources: community, operator_experience
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # REPORT WRITING
 
@@ -15,7 +15,7 @@ Impact-first. Human tone. No theoretical language. Triagers are people.
 
 ## THE MOST IMPORTANT RULE
 
-> **Never use "could potentially" or "could be used to" or "may allow".**
+
 > Either it does the thing or it doesn't. If you haven't proved it, don't claim it.
 
 ```
@@ -379,13 +379,13 @@ Each YES raises severity:
 [ ] First sentence states exact impact in plain English
 [ ] Steps to Reproduce has exact HTTP request (copy-paste ready)
 [ ] Response showing the bug is included (screenshot or JSON body)
-[ ] Two test accounts used — not just one account testing itself
+[ ] 选择能够证明权限关系的对照方法（双账号是可选方法）
 [ ] CVSS score calculated and included
 [ ] Recommended fix is 1-2 sentences (not a lecture)
 [ ] No typos in endpoint paths or parameter names
-[ ] Report is < 600 words — triagers skim long reports
+[ ] 按复现需要组织长度，没有固定 600 字上限
 [ ] Severity claimed matches impact described — don't overclaim
-[ ] Never used "could potentially" or "may allow"
+[ ] 明确区分已证明影响与待验证边界
 [ ] PoC is reproducible by triager from a fresh state
 ```
 
@@ -489,9 +489,9 @@ Authorization: Bearer ACCOUNT_A_TOKEN
 
 ## Related Skills & Chains
 
-- **`triage-validation`** — When deciding whether to write a report at all. Workflow primitive: NEVER open this skill before `triage-validation`'s 8-Question Gate passes; a finding that fails the gate should be killed, not written up.
+- **`triage-validation`** — When deciding whether to write a report at all. Workflow primitive: this skill may help plan evidence and draft research notes; an incomplete candidate remains research notes with evidence gaps and next steps; if time-limited, retain it in the deferred table. Only formal findings require all eight answers to pass.
 - **`bugcrowd-reporting`** — When the target is a Bugcrowd program. Workflow primitive: this skill's body template is the foundation; `bugcrowd-reporting` overlays VRT selection, severity-request paragraph, OOS-clause rebuttals on top.
-- **`evidence-hygiene`** — When PoC screenshots / HARs are being attached to the report. Workflow primitive: every artifact referenced in the "Supporting Materials" / "Proof of Concept" section gets routed through `evidence-hygiene` for cookie + PII redaction before attachment.
+- **`evidence-hygiene`** — When PoC screenshots / HARs are being attached to the report. Workflow primitive: evidence-hygiene supplies optional capture and redaction methods while preserving reproducibility.
 - **`redteam-report-template`** — When the engagement is an external red team (NOT bug bounty). Workflow primitive: confirm engagement mode via `bb-methodology` PART 0; if red-team, swap this skill out for `redteam-report-template` (different audience, different structure: Subject / Observations / Description / Impact / Recommendation / PoC).
 
 ---
@@ -541,8 +541,8 @@ An authorized bug-bounty engagement saw P4-default findings escalated to P3 via 
 Everything in the submission body is logged forever by the platform. Operate accordingly:
 
 - Use throwaway test accounts created specifically for the engagement.
-- Rotate cookies / tokens after each submission (don't reuse the cookie that's pasted in the report).
-- Never paste production cookies, real user emails, or real PII into the report body — redact in the PoC step.
+- 凭据管理由用户工作流安排，不设每次提交后强制轮换。
+
 - Screenshots of admin panels: blur the user list, blur the URL bar if it contains tokens.
 
 Cross-link `evidence-hygiene` for the full capture-and-redact protocol.

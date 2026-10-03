@@ -6,7 +6,7 @@ metadata:
   report_count: 6
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## What is Clickjacking
 
@@ -41,7 +41,7 @@ Header-absence is the **trigger for investigation, not the finding**. Two steps:
 ```
 curl -sI https://target.example/account/transfer | grep -iE 'x-frame-options|content-security-policy'
 ```
-If BOTH `X-Frame-Options` and CSP `frame-ancestors` are absent, the page is a *candidate*. If either is present and restrictive (`DENY`/`SAMEORIGIN`/`frame-ancestors 'none'|'self'`), stop — it's protected.
+If BOTH `X-Frame-Options` and CSP `frame-ancestors` are absent, the page is a *candidate*. If either is present and restrictive (`DENY`/`SAMEORIGIN`/`frame-ancestors 'none'|'self'`), verify actual framing behavior; the header is counterevidence for this route.
 
 **Step 2 — Prove it actually frames and clicks (required for a real finding).** Build a minimal PoC and load it in a real browser:
 
@@ -62,7 +62,7 @@ Confirm ALL of the following, or it is not exploitable:
 
 - Public, read-only pages (home/marketing) lacking frame protection are low/informational — no sensitive action to redress.
 - APIs and non-HTML endpoints (JSON, images) are not clickjacking targets.
-- **Header-absence alone is NOT a finding.** SameSite cookies, framebusting JS, or the lack of any sensitive framed action can each fully defeat it — which is why Step 2 is mandatory.
+- **Header-absence alone is NOT a finding.** SameSite cookies, framebusting JS, or the lack of any sensitive framed action can each fully defeat it — Step 2 is one available method to answer Q4/Q5.
 
 ## Proof Requirements
 

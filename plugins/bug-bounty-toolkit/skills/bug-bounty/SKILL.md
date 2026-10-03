@@ -5,7 +5,11 @@ metadata:
   sources: community, public_research
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 # Bug Bounty Master Workflow
 
@@ -50,7 +54,7 @@ work, or an external blocker prevents further progress.
 2. **EVIDENCE-BASED CLAIMS** -- keep unproven leads as research hypotheses; continue worthwhile investigation within the shared time budget and request more time in chat when needed. Formal findings require the unified eight-question gate.
 3. **VALIDATE BEFORE REPORTING** -- use the unified eight-question gate; record evidence gaps and the next research step for incomplete candidates.
 4. **Validate before writing** -- check CHANGELOG, design docs, deployment scripts FIRST
-5. **One bug class at a time** -- go deep, don't spray
+5. **研究安排参考** -- 可以围绕高价值线索深入，按用户时间安排选择
 6. **Verify data isn't already public** -- check web UI in incognito before reporting API "leaks"
 7. **20-MINUTE REVIEW** -- after 20 minutes without meaningful progress on the current direction, review evidence and choose rotation or a reasoned continuation under the shared value/time policy; retain every sub-site in the queue.
 8. **VALUE-FIRST HUNTING** -- rank observed business/data/role leads by the shared Tier 0-3 policy. Preserve unknown sites for classification and record low-value deferrals with their evidence.
@@ -438,7 +442,7 @@ HIGHEST PRIORITY (crown jewel x easiest entry):
 
 # PHASE 3: HUNT
 
-## Note-Taking System (Never Hunt Without This)
+## Note-Taking System (参考格式)
 ```markdown
 # TARGET: company.com -- SESSION 1
 
@@ -1025,7 +1029,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 4. **Secrets reachability** — Check `permissions:` at workflow AND job level. No explicit `permissions:` block = repo default (often `write-all`). Check `env:` blocks for `${{ secrets.* }}`. Check if `GITHUB_TOKEN` has write permissions.
 5. **Impact chain** — Bazel: issue title injection → composite action shell injection → `BAZEL_IO_TOKEN` + `GITHUB_TOKEN (write-all)` → Bazel codebase backdoor capability (affects Google, Kubernetes, Uber, LinkedIn).
 
-**Kill signals:** `${{ contains(...) }}` or `${{ startsWith(...) }}` returning booleans are NOT injectable — false positive. `${{ github.event.pull_request.labels.*.name }}` inside `contains()` evaluates to `true`/`false`, not the label text.
+**反证参考：** `${{ contains(...) }}` or `${{ startsWith(...) }}` returning booleans are NOT injectable — false positive. `${{ github.event.pull_request.labels.*.name }}` inside `contains()` evaluates to `true`/`false`, not the label text.
 
 #### 2. Untrusted Checkout (Pwn Request)
 
@@ -1038,7 +1042,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 4. **TOCTOU** — Label-gated `pull_request_target` workflows: attacker gets label added (social engineering), workflow checks label exists, attacker pushes malicious commit between check and checkout. The `ref:` at checkout time resolves to the new commit. **Mutable refs (`github.event.pull_request.head.sha` at trigger time vs checkout time) are the root cause.**
 5. **Post-exploitation** — After initial access, enumerate all secrets: `env | base64`, `cat /proc/self/environ`, `gcore $(pgrep Runner.Worker)` + `strings core.* | grep ghp_`. PyTorch attackers got 3 bot PATs → combined them to bypass branch protection on main.
 
-**Kill signals:** `if: "!github.event.pull_request.head.repo.fork"` blocks external attackers. `permissions: {}` at workflow level with only `contents: read` at job level limits damage. Ephemeral runners with `--ephemeral` flag prevent persistence.
+**反证参考：** `if: "!github.event.pull_request.head.repo.fork"` blocks external attackers. `permissions: {}` at workflow level with only `contents: read` at job level limits damage. Ephemeral runners with `--ephemeral` flag prevent persistence.
 
 #### 3. Artifact Poisoning
 
@@ -1050,7 +1054,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 3. **Source validation** — Does the `workflow_run` consumer check `github.event.workflow_run.head_repository.full_name != github.repository`? If not, fork PR artifacts are consumed blindly. Rust release pipeline was vulnerable to exactly this.
 4. **ArtiPACKED (persist-credentials)** — `actions/checkout` defaults to `persist-credentials: true`. This writes `GITHUB_TOKEN` to `.git/config`. If the artifact upload path includes `.git/` (e.g., `path: .`), the token is publicly downloadable from the Actions artifact. **Check**: does any `upload-artifact` step use `path: .` or a broad path that includes `.git/`?
 
-**Kill signals:** Upload and download in the same workflow run (connected by `needs:`). `workflow_run` consumer that explicitly checks fork origin. `persist-credentials: false` on checkout.
+**反证参考：** Upload and download in the same workflow run (connected by `needs:`). `workflow_run` consumer that explicitly checks fork origin. `persist-credentials: false` on checkout.
 
 #### 4. Cache Poisoning
 
@@ -1065,7 +1069,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 4. **Privileged consumption** — The cache is restored in a `push` or `schedule` workflow on the default branch. These workflows have full `secrets` access. The poisoned dependency executes during `npm install` / `pip install` / `gradle build` and exfiltrates secrets.
 5. **Clinejection chain** — Prompt injection → AI agent runs `npm install` from attacker commit → Cacheract in npm cache → nightly publish workflow restores cache → VSCE_PAT, OVSX_PAT, NPM_RELEASE_TOKEN stolen → malicious Cline v2.3.0 published for 8 hours.
 
-**Kill signals:** Cache key includes `github.sha` or `github.run_id`. Separate cache keys per workflow. `actions/cache/restore` (read-only) instead of `actions/cache` (read-write) in PR workflows.
+**反证参考：** Cache key includes `github.sha` or `github.run_id`. Separate cache keys per workflow. `actions/cache/restore` (read-only) instead of `actions/cache` (read-write) in PR workflows.
 
 #### 5. Self-Hosted Runners
 
@@ -1078,7 +1082,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 4. **Lateral movement** — RoR persistence → wait for privileged `push`/`schedule` workflows → steal tokens from `.git/config`, `$GITHUB_ENV`, `/proc/PID/environ`, or Runner.Worker process memory. PyTorch: 3 bot PATs → 93 repos → AWS S3 write access → `pip install pytorch` supply chain.
 5. **Docker group escalation** — `docker run -v /:/host --privileged alpine chroot /host` → full host root. Add SSH keys, modify sudoers, install persistent backdoors.
 
-**Kill signals:** `--ephemeral` flag on runner registration. "Require approval for ALL outside collaborators" (not just first-time). Runner not in Docker group. Private repo (no external PRs).
+**反证参考：** `--ephemeral` flag on runner registration. "Require approval for ALL outside collaborators" (not just first-time). Runner not in Docker group. Private repo (no external PRs).
 
 #### 6. Supply Chain (commit-sha / impostor-commit / ref-confusion)
 
@@ -1090,7 +1094,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 3. **RepoJacking** — Org renames create a redirect. Old name becomes available. Attacker registers old org name, creates same repo, hosts malicious action. Shopify/unity-buy-sdk used `MirrorNG/unity-runner` → MirrorNG renamed to MirageNet → `MirrorNG` was claimable. **Check**: `GET /users/<action-owner>` returns 404? Takeover possible.
 4. **Payload stealth** — tj-actions memdump.py: extract secrets from Runner.Worker process memory via `/proc/PID/maps` + `/proc/PID/mem`, encrypt with AES+RSA, output to workflow log. Logs are publicly visible but encrypted — only attacker has the key.
 
-**Kill signals:** Full 40-char SHA pinning (`uses: actions/checkout@b4ffde65...`). Dependabot configured for `github-actions` ecosystem. Organization-level action allowlist.
+**反证参考：** Full 40-char SHA pinning (`uses: actions/checkout@b4ffde65...`). Dependabot configured for `github-actions` ecosystem. Organization-level action allowlist.
 
 #### 7. AI Agent Security
 
@@ -1101,7 +1105,7 @@ sisakulint findings are **potentially exploitable** — not confirmed bugs. Ever
 2. **Tool permissions** — If the AI agent has Bash/Write/Edit tools and runs with secrets in env, prompt injection = RCE + secret exfil. `allowed_non_write_users: "*"` means ANY user can trigger.
 3. **Multi-phase chain** — Clinejection: prompt injection → AI runs `npm install` from attacker commit → Cacheract plants in npm cache → nightly publish restores cache → tokens stolen → malicious version published. **A prompt injection finding alone may seem low-severity, but it's a gateway to cache poisoning and supply chain attacks.**
 
-**Kill signals:** `author_association == 'MEMBER' || 'OWNER'` check before AI processing. `--read-only --no-exec` flags on AI CLI. `permissions: {}` at workflow level.
+**反证参考：** `author_association == 'MEMBER' || 'OWNER'` check before AI processing. `--read-only --no-exec` flags on AI CLI. `permissions: {}` at workflow level.
 
 #### 8. Permissions / Secrets Hygiene
 
@@ -1170,7 +1174,7 @@ cat "$RECON_DIR/subdomains.txt" | dnsx -silent -cname -resp | grep -i "CNAME" | 
 nuclei -l "$RECON_DIR/subdomains.txt" -t ~/nuclei-templates/takeovers/ -o /tmp/takeovers.txt
 ```
 
-### Quick-Kill Fingerprints
+### 技术指纹与反证参考
 ```
 "There isn't a GitHub Pages site here"  -> GitHub Pages
 "NoSuchBucket"                          -> AWS S3
@@ -1282,40 +1286,9 @@ curl -s http://TARGET:2375/containers/json
 
 读取[统一八问及通过标准](../triage-validation/references/eight-question-gate.md)，按 Q1–Q8 逐题填写答案、理由和证据位置。全部通过后进入正式报告；待补证的候选按价值与时间规则继续研究或申请加时。
 
-## 4 Pre-Submission Gates
+## 报告验证
 
-### Gate 0: Reality Check (30 seconds)
-```
-[ ] The bug is real -- confirmed with actual HTTP requests, not just code reading
-[ ] The bug is in scope -- checked program scope explicitly
-[ ] I can reproduce it from scratch (not just once)
-[ ] I have evidence (screenshot, response, video)
-```
-
-### Gate 1: Impact Validation (2 minutes)
-```
-[ ] I can answer: "What can an attacker DO that they couldn't before?"
-[ ] The answer is more than "see non-sensitive data"
-[ ] There's a real victim: another user's data, company's data, financial loss
-[ ] I'm not relying on the user doing something unlikely
-```
-
-### Gate 2: Deduplication Check (5 minutes)
-```
-[ ] Searched HackerOne Hacktivity for this program + similar bug title
-[ ] Searched GitHub issues for target repo
-[ ] Read the most recent 5 disclosed reports for this program
-[ ] This is not a "known issue" in their changelog or public docs
-```
-
-### Gate 3: Report Quality (10 minutes)
-```
-[ ] Title: One sentence, contains vuln class + location + impact
-[ ] Steps to reproduce: Copy-pasteable HTTP request
-[ ] Evidence: Screenshot/video showing actual impact (not just 200 response)
-[ ] Severity: Matches CVSS 3.1 score AND program's severity definitions
-[ ] Remediation: 1-2 sentences of concrete fix
-```
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## CVSS 3.1 Quick Guide
 
@@ -1342,28 +1315,9 @@ curl -s http://TARGET:2375/containers/json
 
 ---
 
-# ALWAYS REJECTED -- Never Submit These
+## 报告判断依据
 
-Missing CSP/HSTS/security headers, missing SPF/DKIM/DMARC, GraphQL introspection alone, banner/version disclosure without working CVE exploit, clickjacking on non-sensitive pages, tabnabbing, CSV injection, CORS wildcard without credential exfil PoC, logout CSRF, self-XSS, open redirect alone, OAuth client_secret in mobile app, SSRF DNS-ping only, host header injection alone, no rate limit on non-critical forms, session not invalidated on logout, concurrent sessions, internal IP disclosure, mixed content, SSL weak ciphers, missing HttpOnly/Secure cookie flags alone, broken external links, pre-account takeover (usually), autocomplete on password fields.
-
-**N/A hurts your validity ratio. Informative is neutral. Only submit what passes the 8-Question Gate.**
-
-## Conditionally Valid With Chain
-
-These low findings become valid bugs when chained:
-
-| Low Finding | + Chain | = Valid Bug |
-|------------|---------|-------------|
-| Open redirect | + OAuth code theft | ATO |
-| Clickjacking | + sensitive action + PoC | Account action |
-| CORS wildcard | + credentialed exfil | Data theft |
-| CSRF | + sensitive state change | Account takeover |
-| No rate limit | + OTP brute force | ATO |
-| SSRF (DNS only) | + internal access proof | Internal network access |
-| Host header injection | + password reset poisoning | ATO |
-| Self-XSS | + login CSRF | Stored XSS on victim |
-
----
+依照用户文件的现象/结果区分和统一八问判断。没有已证明影响的发现保留为笔记；不增加按漏洞名称一律拒绝的清单。
 
 # PHASE 5: REPORT
 
@@ -1542,7 +1496,7 @@ When in doubt: open the orchestrator FIRST on any new target, let it route, then
 
 ### Common misuse: loading every hunt-* simultaneously
 
-There are 30+ hunt-* skills in this repo. Each carries a non-trivial context footprint. The orchestrator's job is to pick 2-3 by topic match, not to dump the entire library. If the user says "hunt this SaaS app", do NOT load every hunt-* skill — pick `web2-recon` + `hunt-idor` + `hunt-api-misconfig` (the SaaS-typical trio) and stop there. Add more only when the recon output suggests a specific additional class (e.g., GraphQL endpoints found → add `hunt-graphql`).
+There are 30+ hunt-* skills in this repo. Each carries a non-trivial context footprint. 按当前线索与实际上下文按需加载技能，不限制为两三个，也不因此跳过其他可用研究方向。
 
 ### Integration with hunt-dispatch
 
@@ -1553,7 +1507,7 @@ This skill routes by **bug class** (topic match). The `hunt-dispatch` skill adde
 3. `hunt-dispatch` loads the platform-specific attack profile
 4. This orchestrator (`bug-bounty`) names the topic-matched hunt-* skills inside the chosen profile
 
-Don't bypass either step. Mode determines what counts as a finding; topic determines what techniques apply.
+模式和主题可帮助选择研究方法；判断与报告仅使用用户文件及八问。
 
 ### Engagement scaffolding
 

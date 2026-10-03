@@ -6,7 +6,7 @@ metadata:
   report_count: 0
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -17,7 +17,7 @@ Trigger when:
 - Bug bounty program lists iOS in scope
 - `apk-redteam-pipeline` already found Android endpoints/secrets — the iOS build often ships a *different* backend version worth diffing (see `hunt-shadow-api`)
 
-DO NOT use for:
+其他任务可参考对应技能：
 - Android-only targets — that's `apk-redteam-pipeline`
 - React Native / Flutter apps already fully covered by JS-bundle analysis on the web side
 - Server-side only assessments with no mobile client in scope
@@ -284,7 +284,7 @@ pip install --break-system-packages frida-tools objection iphone_backup_decrypt
   analysis.
 - **`hunt-api-misconfig`** — hardcoded JWTs/API keys extracted here feed directly into JWT
   algorithm-confusion and mass-assignment testing there.
-- **`evidence-hygiene`** — extracted Keychain items and secrets need redaction before report
+- **`evidence-hygiene`** — extracted Keychain items and secrets may be redacted for the report
   inclusion.
 - **`offensive-osint`** — App Store developer-page enumeration is part of the broader org recon
   graph; pair with certificate-transparency lookups for the same brand.

@@ -6,7 +6,7 @@ metadata:
   report_count: 0
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## LLM08 — Vector & Embedding Weaknesses (RAG Pipeline Attacks)
 
@@ -16,7 +16,7 @@ document that fires when that specific document is summarized, and ASI06 memory 
 the vector **storage and retrieval layer itself** — attacks that don't need any prompt-injection
 payload at all, because the bug lives in how the embeddings are stored, scoped, and searched.
 
-Read `hunt-llm-ai`'s False-Positive Gate first — it applies here unchanged (run-twice rule,
+Read `hunt-llm-ai`'s False-positive evidence checks (supports Q3–Q5) first — it applies here unchanged (run-twice rule,
 anchor to a known secret, cross-tenant proof not assertion, OOB-or-it-didn't-happen for exfil).
 This document adds gates specific to the vector layer.
 
@@ -89,7 +89,7 @@ If the DB itself requires auth but the **app's own API** exposes a raw document-
 GET /api/knowledge/document/00042          # sequential/guessable ID — try 00041, 00043
 POST /api/chat  {"query": "...", "namespace": "tenant-B-namespace"}   # attacker-supplied scope
 ```
-**Proof bar (per `hunt-llm-ai` Gate #3):** the returned content must contain a value you can
+**取证参考（用于八问 Q3–Q5）：** the returned content must contain a value you can
 independently verify belongs to a different, real tenant/account — not merely "different-looking
 content." Compare against a control query on your own account first.
 
@@ -127,7 +127,7 @@ or steering the user toward an attacker-controlled link/action).
 
 ---
 
-## False-Positive Gate (extends hunt-llm-ai)
+## False-positive evidence checks (supports Q3–Q5) (extends hunt-llm-ai)
 
 1. **Second-session rule.** Persistent-poisoning claims require a genuinely separate,
    clean session/account retrieving the payload via normal query flow — not a re-ask by the
@@ -158,7 +158,7 @@ or steering the user toward an attacker-controlled link/action).
 ## Related Skills & Chains
 
 - **`hunt-llm-ai`** — owns session-scoped prompt injection, exfil channels, and the base
-  False-Positive Gate this skill extends. A poisoned RAG chunk that triggers OOB exfil chains
+  False-positive evidence checks (supports Q3–Q5) this skill extends. A poisoned RAG chunk that triggers OOB exfil chains
   directly into that skill's markdown-image/tool-use exfil techniques.
 - **`hunt-idor`** — vector-store cross-tenant leaks are IDOR at the retrieval layer; same
   verifiable-artifact proof standard applies.
@@ -166,5 +166,5 @@ or steering the user toward an attacker-controlled link/action).
   class as any other unauthenticated internal API/service.
 - **`hunt-cloud-misconfig`** — managed vector-DB services (Pinecone, Weaviate Cloud) leak via
   API keys embedded in JS bundles the same way any other cloud API key does.
-- **`triage-validation`** — enforce the False-Positive Gate before writing anything up;
+- **`triage-validation`** — enforce the False-positive evidence checks (supports Q3–Q5) before writing anything up;
   confabulation and same-session re-asks are not findings.

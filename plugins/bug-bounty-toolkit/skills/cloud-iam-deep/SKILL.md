@@ -6,7 +6,7 @@ metadata:
   report_count: 6
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use
 
@@ -18,7 +18,7 @@ Trigger when:
 - A Kubernetes API or service-account token is exposed
 - Post-RCE on a cloud-hosted instance — pivot to cloud control plane
 
-Do NOT use for:
+其他任务可参考对应技能：
 - On-prem-only environments (use AD attack skills — but those are out of scope per external-only boundary)
 - Web2 vulns that happen to be on AWS — use the relevant `hunt-*` skill
 
@@ -359,8 +359,8 @@ kubectl --token=$TOKEN --server=https://k8s.target.com:6443 --insecure-skip-tls-
 
 ## Anti-patterns
 
-- **DO NOT run write/delete operations without explicit OK** — IAM mutation is destructive and audit-visible
-- **DO NOT enumerate everything in scope of an account** — `aws iam list-users` against an account with 50,000 users is loud and slow
+- 写操作按用户文件展示请求并获批；DELETE 只构造不发送，不破坏生产。
+
 - **DO NOT use `aws *` with non-test creds without confirming you have the right account** — accidentally hitting prod = career risk
 - **DO NOT confuse "I have the credential" with "this credential is current"** — always check expiration / rotation via STS first
 - **DO NOT assume an STS token from one account works across accounts** — region restrictions and trust policies apply

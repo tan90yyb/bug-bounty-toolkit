@@ -6,7 +6,7 @@ metadata:
   report_count: 0
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-NEXTJS — Next.js / SSR Framework Vulnerabilities
 
@@ -130,7 +130,7 @@ fetches URLs allowed by `images.remotePatterns` / `images.domains` in
 `next.config.js`. A non-whitelisted `url` returns **400 by default** — that is
 the optimizer's normal allowlist rejection, NOT a "block" you bypassed. A **200**
 returns an *optimized image*, not the upstream response body, so a status code
-alone NEVER confirms SSRF. Confirm only via an **out-of-band callback to a unique
+alone NEVER confirms SSRF. 可使用 **out-of-band callback to a unique
 Collaborator subdomain** (above), or by body-diffing a known-internal vs
 known-external target. Do not report on status code.
 

@@ -4,7 +4,7 @@
 
 ## 33. AI-Assisted OSINT
 
-> **Warning:** Never paste PII, sensitive IOCs, or unique pivots into cloud LLMs. They log inputs and may use them for training. Use local models for sensitive analysis.
+
 
 | Tool | Strength |
 |------|---------|

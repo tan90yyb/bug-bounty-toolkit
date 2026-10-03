@@ -59,10 +59,10 @@ For each captured name, derive candidate emails using §11 templates. Cross-refe
 
 ### 41.4 Sock-puppet considerations
 
-- **Never connect from the corporate persona.** LinkedIn shows "viewed your profile" notifications.
+
 - **Use a sock puppet** with a plausible profile (5+ years built history, similar industry, mutual connections to throw off correlation). Tools: persona-builder workflows.
 - **LinkedIn "private mode" (anonymous viewing)** — toggle in settings; reduces one signal but Sales Navigator can still see anonymized "someone viewed your profile."
-- **Connection requests are detectable.** Don't send any during recon.
+
 - **Profile views accumulate suspicion** if you view 100+ employees of one company in a day. Throttle: <20/day per persona.
 
 ### 41.5 Output
@@ -334,7 +334,7 @@ For engagements that include a physical-touch component (badge access, tailgatin
 ### 45.5 Discipline
 
 - Document that imagery + photos are public-source.
-- Don't trespass for "verification" — physical recon during OSINT phase = look only.
+
 - Note imagery date — buildings change.
 
 ---

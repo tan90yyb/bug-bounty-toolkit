@@ -1,12 +1,16 @@
 ---
 name: hunt-dispatch
-description: "Codex-native skill-set router for the bug-bounty orchestrator. Fingerprints an authorized target, selects platform attack skills, and loads the Red Team or WAPT skill set after bb-methodology confirms the mode and blackbox or greybox context. Not for direct user invocation."
+description: "Codex-native skill-set router for the bug-bounty orchestrator. Fingerprints an authorized target, selects platform attack skills, and loads the Red Team or WAPT skill set using the current task mode and blackbox or greybox context."
 metadata:
   sources: community
   report_count: 0
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 # hunt-dispatch
 
@@ -14,17 +18,7 @@ skill-set loader for the `bug-bounty` orchestrator. one concept (which skills to
 
 ## engagement context
 
-every skill loaded below operates under one frame, and it holds for the whole session:
-
-- **authorized and scope-bounded.** the operator established authorization for the named scope
-  before active testing. testing stays inside it. record an out-of-scope host as pending or
-  excluded without probing it, then continue the eligible entries in the site queue.
-- **the output is a finding, not an exploit.** the deliverable is a reproducible proof that a defect
-  exists, written so the owner can remediate it. enough to demonstrate impact; no further.
-- **remediation is the point.** these skills exist so defects get fixed by the people who own them.
-
-this frame is stated here because it is the choke point every routed engagement passes through before any
-`hunt-*` skill loads. it is not a prompt and needs no answer.
+范围、请求审批、数据读取、时间、证据保存与报告判断使用用户文件和最新明确修改。平台与任务类型帮助选择方法，不增加测试进入门槛；足够证据后停止新增真实记录读取，根因扩散与其他研究继续按用户安排执行。
 
 invocation contract:
 
@@ -175,9 +169,9 @@ real targets almost always return multiple signals at once — e.g. a single hos
 can show Cloudflare (CDN) + `login.microsoftonline.com` (redirect) + `__NEXT_DATA__`
 (Next.js front end) + `amazonaws` (origin) simultaneously. loading every match
 blindly can pull 20-plus skills and blow the context window, drowning the
-high-signal skill in noise. apply this precedence and cap:
+high-signal skill in noise. 可参考以下优先顺序：
 
-**priority order (load highest tiers first, stop at the cap):**
+**priority order (load according to current evidence):**
 
 ```
 tier 1  identity / SSO fabric    okta-attack, m365-entra-attack
@@ -194,9 +188,7 @@ tier 5  protocol / class signals hunt-nosqli, hunt-lfi, hunt-deserialization,
         hunt-tls-network, hunt-ldap, hunt-brute-force, hunt-session
 ```
 
-**load budget: cap platform-skill loads at 8.** if more than 8 match, keep the
-highest-tier 8 and drop the rest; print the dropped ones under
-`deferred:` in the taxonomy block so they can be loaded on demand later.
+根据当前线索按需加载技能；优先顺序可作参考，不设置固定 8 个技能上限。
 
 **de-dup rules (avoid loading two skills for the same evidence):**
 
@@ -209,7 +201,7 @@ highest-tier 8 and drop the rest; print the dropped ones under
   becomes tier 1 for that host).
 - a framework marker (`__NEXT_DATA__`, `laravel_session`) and a generic class
   signal (`?redirect=`, `Access-Control-Allow-Origin`) on the same host → load the
-  framework skill (tier 4) and keep the class skill **only if budget remains**;
+  framework skill (tier 4) and keep the class skill as needed for the evidence;
   the WAPT/redteam mode set already loads the common class skills unconditionally.
 
 ## step 2 — load skill set
@@ -288,19 +280,15 @@ hunt-source-leak     hunt-tls-network
 
 report format: `report-writing` (`bugcrowd-reporting` if the target is on bugcrowd).
 
-box=greybox: credentials are provided for this authorized engagement and kept only in the current session.
+box=greybox: credentials are provided for the engagement; evidence storage follows the user file.
 
-**do not fan out across the authenticated hunt-\* set until the creds are
-validated.** the `bug-bounty` orchestrator only gathers the supplied credentials — it
-does not confirm they work. firing every authenticated test with dead, MFA-gated,
-or wrong-role creds wastes the whole run and produces false "no auth surface"
-conclusions. run a single low-cost auth preflight first:
+可先检查登录状态、账号角色与 MFA 状态，便于选择认证或授权测试；这不是额外进入门槛。示例：
 
 ```bash
 # session-cookie creds: one authenticated GET against an identity echo endpoint
 curl -sS -m 12 -b "$SESSION_COOKIE" "https://$TARGET/api/me" -w '\n%{http_code}\n'
 #   200 + your username/email  → live session, role visible in body
-#   401/403                    → dead or insufficient — STOP, re-auth
+#   401/403                    → session absent or insufficient; record actual state
 
 # bearer/JWT creds: same probe with Authorization
 curl -sS -m 12 -H "Authorization: Bearer $TOKEN" \
@@ -308,7 +296,7 @@ curl -sS -m 12 -H "Authorization: Bearer $TOKEN" \
 
 # raw user/pass: drive the real login flow once, capture Set-Cookie, then echo
 #   watch for an MFA / step-up challenge in the response — if present, the creds
-#   alone do not yield an authenticated session (see memory: operator-capability)
+#   alone do not yield an authenticated session (record actual session state)
 ```
 
 confirm three things from the preflight, and record them for the hunt-\* skills:
@@ -321,10 +309,7 @@ confirm three things from the preflight, and record them for the hunt-\* skills:
    you hold creds but **not** a session — default to least capability and confirm
    with the operator before claiming authenticated reach.
 
-if the preflight fails, do **not** silently continue as blackbox — surface
-"greybox creds did not validate (HTTP {code} / MFA challenge)" so the operator
-can re-supply. only after a clean preflight: apply the validated session to every
-authenticated test.
+登录状态未知或失败时记录事实，可继续用户允许的未认证方向；需要有效会话的测试按实际会话状态安排。
 
 ## step 3 — taxonomy print (once, at session start)
 
@@ -335,8 +320,8 @@ emit a deterministic block. plain text, lowercase, colon-delimited, no decoratio
 ```
 loaded for red team: {N} skills
   mindset:    redteam-mindset
-  platform:   {fingerprint-matched skills (<=8, tier order), or "none detected"}
-  deferred:   {platform skills past the 8-cap, or omit line if none}
+  platform:   {fingerprint-matched skills, or "none detected"}
+  deferred:   {skills not yet needed, or omit line if none}
   auth:       hunt-ato, hunt-auth-bypass, hunt-saml, hunt-oauth, hunt-mfa-bypass
   inj:        hunt-rce, hunt-sqli, hunt-ssrf, hunt-file-upload
   infra:      hunt-http-smuggling, hunt-cloud-misconfig
@@ -362,54 +347,22 @@ loaded for wapt ({blackbox|greybox}): {N} skills
   reporting:  bb-methodology, security-arsenal, triage-validation
 ```
 
-## subagent scope inheritance
+## 委派时交接用户规则
 
-if any part of the hunt is delegated to subagents, scope does **not** inherit
-implicitly. every subagent prompt must carry:
-
-1. **the authorized host list, verbatim, as data.** not "the target estate", not
-   "*.target.com" — the explicit list. a subagent cannot infer the boundary.
-2. **the discovered-host rule:** hosts found mid-run (via CT logs, CSP headers,
-   JS bundles, CNAME chains, error messages) are reported to the parent first.
-   The parent checks ICP filing: a registrant belonging to the user-named company
-   enters scope and is sent back as an updated explicit host list. Other-company
-   or unconfirmed hosts stay pending. A subagent never expands its own host list.
-3. **a deny-list of action-executing endpoints, applied BEFORE any allow-list.**
-   deny by verb-in-name first: `refund`, `settle`, `payout`, `transfer`, `adjust`,
-   `disburse`, `create`, `update`, `delete`, `rotate`, `reset`, `send`, `initiate`,
-   `generate`, `process`. only then allow read-shaped names. order matters —
-   a path like `refund/batch/status` matches the read-shaped keyword "status"
-   but is a refund route; an allow-list applied first would probe it.
-4. **"read-only" spelled out as forbidden verbs**, not as an adjective. "read-only"
-   is routinely interpreted as "don't be destructive", which does not stop an agent
-   sending `{}` to an endpoint whose name starts with `generate*` and creating a
-   real record on production.
-
-**lesson from an authorized engagement:** a subagent was told READ-ONLY and still
-(a) created a live record on production because it expected `{}` to return a
-validation error, and (b) wrote an object to a cloud bucket that was never on the
-authorized list — one the parent prompt had named only for a DNS check. both were
-disclosed in the deliverable. the fix is structural: pass scope as data, deny
-by verb before allowing by verb, and wait for the parent to verify filing and
-update the explicit host list before testing a discovered host.
+如实际使用子代理，将当前资产清单、用户文件、已批准请求、时间预算、真实记录台账和待续测表一同交接。公司ICP备案符合用户规则的资产纳入范围，其他公司或未知归属待确认。各代理共用同一漏洞的数据计数，不新增按路径关键词拒绝测试的 deny-list。
 
 ## step 4 — return control to the bug-bounty orchestrator
 
-after taxonomy print, hand control back to `bug-bounty` for focused active testing. do not run probes here — this skill only loads context.
+After permitted baseline and fingerprint requests and taxonomy output, return the evidence and queue to `bug-bounty` for focused testing. Record each request and follow the same scope, methods and time budget.
 
-## privacy
+## 证据保存
 
-never echo back, log, or persist:
-- SOW / scope-of-work / engagement-letter content
-- grey box credentials (kept only in the current session, never written to disk)
-- client identifiers in user-level memory
-
----
+保存位置与可选脱敏按用户文件七执行。
 
 ## Related Skills & Chains
 
 - **`bb-methodology`** — When PART 0 mode confirmation completes. Workflow primitive: `bb-methodology` confirms engagement type (red team vs WAPT vs bug bounty); the answer feeds directly into this skill's `mode=redteam` / `mode=wapt` invocation.
 - **`redteam-mindset`** + **`mid-engagement-ir-detection`** — When `mode=redteam` is loaded. Workflow primitive: these are the always-on skills loaded first by step 2 of the redteam flow before any platform skill or hunt-* skill.
 - **`okta-attack`** / **`m365-entra-attack`** / **`enterprise-vpn-attack`** / **`vmware-vcenter-attack`** / **`cloud-iam-deep`** / **`supply-chain-attack-recon`** / **`apk-redteam-pipeline`** — When fingerprint signals match. Workflow primitive: step 1's curl fingerprint scan against `RECON_DIR/live-sites.txt` maps banner / domain signals to one or more of these platform skills.
-- **`hunt-rce`** / **`hunt-sqli`** / **`hunt-ssrf`** / **`hunt-ato`** / **all other hunt-* skills`** — When the mode-specific skill set is being printed. Workflow primitive: this skill is the loader; it names the hunt-* skills but does not run probes — actual hunting happens after step 4 returns control to `bug-bounty`.
+- **`hunt-rce`** / **`hunt-sqli`** / **`hunt-ssrf`** / **`hunt-ato`** / **all other hunt-* skills`** — When the mode-specific skill set is being printed. Workflow primitive: this skill is the loader; it names the hunt-* skills but performs permitted baseline probes and returns evidence to `bug-bounty` for focused hunting.
 - **`report-writing`** vs **`redteam-report-template`** — When the taxonomy print specifies the report format. Workflow primitive: `mode=wapt` ends with `report-writing` as the deliverable format; `mode=redteam` ends with `redteam-report-template` instead.

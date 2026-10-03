@@ -5,7 +5,11 @@ metadata:
   sources: community, operator_experience
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 # TRIAGE & VALIDATION
 
@@ -13,7 +17,7 @@ metadata:
 
 读取[统一八问验证门](references/eight-question-gate.md)，按 Q1–Q8 的通过标准逐项回答并附证据。全部通过才输出正式漏洞报告。未通过题项形成补证计划；按[价值与时间规则](../bug-bounty/references/value-and-time.md)继续有价值的研究，需要加时就在聊天中说明理由、预计时长和目标，获得用户同意后继续。
 
-取证使用行为准则的统一规则：自建/合成数据优先；必要的授权验证中，同一漏洞累计最多 5 条真实信息，足够即止，跨接口、账号与重试共用上限；允许脱敏并保留复现所需结构。未证明的影响不得写成确认结论。
+取证使用行为准则的统一规则：自建/合成数据优先；必要的授权验证中，同一漏洞累计最多 5 条不同真实信息，足够即止，跨接口、账号与重试共用上限；允许脱敏并保留复现所需结构。未证明的影响不得写成确认结论。
 
 ---
 
@@ -66,83 +70,17 @@ a well-formed `{}`. The false Critical was avoided only because someone re-teste
 
 ---
 
-## 4 PRE-SUBMISSION GATES
+## 报告验证
 
-Run in sequence. ALL 4 must PASS.
+正式报告仅使用[统一八问](references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。
 
-### Gate 0: Reality Check (30 seconds)
-```
-[ ] Bug is REAL — confirmed with actual HTTP requests, not code reading alone
-[ ] Bug is IN SCOPE — checked program scope page explicitly
-[ ] Reproducible from scratch — can reproduce starting from fresh session
-[ ] Evidence ready — screenshot, response body, or video
-```
+## 报告判断依据
 
-### Gate 1: Impact Validation (2 minutes)
-```
-[ ] Can answer: "What can attacker DO that they couldn't before?"
-[ ] Answer is more than "see non-sensitive data" (unless program pays for info disclosure)
-[ ] Real victim: another user's data, company's data, financial loss
-[ ] Not relying on victim doing something unlikely
-```
+依照用户文件的现象/结果区分和统一八问判断。没有已证明影响的发现保留为笔记；不增加按漏洞名称一律拒绝的清单。
 
-### Gate 2: Deduplication Check (5 minutes)
-```
-[ ] Searched HackerOne Hacktivity for this program + similar bug title/endpoint
-[ ] Searched GitHub issues for target repo
-[ ] Read most recent 5 disclosed reports for this program
-[ ] Not a "known issue" in their changelog or public docs
-[ ] Google: "TARGET_NAME ENDPOINT_NAME bug bounty"
-```
+## 攻击链示例（供八问取证参考）
 
-### Gate 3: Report Quality (10 minutes)
-```
-[ ] Title: [Bug Class] in [Endpoint] allows [actor] to [impact]
-[ ] Steps to Reproduce: copy-pasteable HTTP request
-[ ] Evidence: screenshot/video of actual impact (not just 200 status)
-[ ] Severity: matches CVSS 3.1 score AND program's severity definitions
-[ ] Remediation: 1-2 sentences of concrete fix
-[ ] NEVER used "could potentially" or "may allow"
-```
-
----
-
-## NEVER SUBMIT LIST
-
-Submitting these destroys your validity ratio.
-
-```
-Missing CSP / HSTS / security headers
-Missing SPF / DKIM / DMARC
-GraphQL introspection alone (no auth bypass, no IDOR demonstrated)
-Banner / version disclosure without working CVE exploit
-Clickjacking on non-sensitive pages (no sensitive action PoC)
-Tabnabbing
-CSV injection (no actual code execution shown)
-CORS wildcard (*) without credential exfil proof of concept
-Logout CSRF
-Self-XSS (only exploits own account)
-Open redirect alone (no ATO or OAuth theft chain)
-OAuth client_secret in mobile app (known, expected)
-SSRF DNS callback only (no internal service access or data)
-Host header injection alone (no password reset poisoning PoC)
-Rate limit on non-critical forms (search, contact, login with Cloudflare)
-Session not invalidated on logout
-Concurrent sessions
-Internal IP in error message
-Mixed content
-SSL weak ciphers
-Missing HttpOnly / Secure cookie flags alone
-Broken external links
-Autocomplete on password fields
-Pre-account takeover (usually — very specific conditions required)
-```
-
----
-
-## CONDITIONALLY VALID — CHAIN REQUIRED
-
-Build the chain first, prove it works end to end, THEN report.
+用户文件要求已证明的影响；下面的链路仅供设计证据时参考。
 
 | Standalone Finding | Chain Required | Valid Result |
 |---|---|---|
@@ -207,22 +145,11 @@ Build the chain first, prove it works end to end, THEN report.
 
 ---
 
-## PRE-SEVERITY GATE
+## 严重性证据核对（八问 Q4/Q8）
 
-Before labelling any finding **Critical** or **High** anywhere in your notes or report — write out the answer to each of these as a one-liner. If you can't answer concretely, **the severity is wrong**.
+下面的问题可辅助回答八问 Q4/Q8，不要求固定复现次数或另外通过五项检查。采用已证明影响和项目规则给出等级。
 
-1. **Have I validated the FULL chain to attacker-attainable impact, or only one primitive in the middle?**
-   — "Primitive confirmed at layer N" ≠ exploitable. Multi-stage chains require ALL stages validated before the severity matches the chain's top end.
-2. **What does the attacker walk away with, in one concrete sentence?**
-   — "RCE on the SP front-end web server" is concrete. "Could lead to RCE" is not — that's High at best, often Medium.
-3. **Have I personally reproduced the full chain end-to-end at least twice?**
-   — Twice = once during discovery, once for the report screenshot/PoC. Not "I'm sure it would work."
-4. **Is there an inheritance gate, signature check, audience check, or other validation step still gating the chain?**
-   — If yes, the chain is not Critical. Document it as "primitive present" at lower severity until the gate is bypassed.
-5. **Has the program rejected this severity class before?**
-   — Many programs cap "info disclosure with no concrete impact" at Low/Info regardless of the data type. Read the program scope.
-
-**Lesson from an authorized engagement:** JWT `alg:none` was initially labelled **Critical** based on the signature-bypass primitive being confirmed at the audience-validation layer. Subsequent testing showed the issuer-trust check still rejected unsigned tokens — the full ATO chain did not complete. Finding had to be retracted. If the Pre-Severity Gate had been run on the original draft, the impact and severity checks would have corrected the Critical label before submission.
+**Lesson from an authorized engagement:** JWT `alg:none` was initially labelled **Critical** based on the signature-bypass primitive being confirmed at the audience-validation layer. Subsequent testing showed the issuer-trust check still rejected unsigned tokens — the full ATO chain did not complete. Finding had to be retracted. If the eight-question evidence checks had been run on the original draft, the impact and severity checks would have corrected the Critical label before submission.
 
 ---
 
@@ -233,7 +160,7 @@ Writing a report before confirming the bug exists (most common)
 Submitting theoretical impact without proof
 "The API returns more fields than necessary" (sensitivity matters — is it actually sensitive?)
 Chaining A+B into one report when they're separate bugs (two separate payouts)
-Reporting B saying "similar to A in my other report" — fresh Gate 0 for every bug
+Reporting B saying "similar to A in my other report" — the same eight-question check for each finding
 Overclaiming severity — triagers trust you less next time
 Under-describing impact — triager doesn't understand why it matters
 ```
@@ -242,7 +169,7 @@ Under-describing impact — triager doesn't understand why it matters
 
 ## RETRACTION DISCIPLINE
 
-When a previously-claimed finding fails reproduction — **never silently drop it.** Document the retraction in the report's appendix. This proves to the triager that you validate your own work, and it saves them from chasing a phantom you've already disproved.
+When a previously-claimed finding fails reproduction — 可记录复现失败原因、当前状态和已观察反证。 This proves to the triager that you validate your own work, and it saves them from chasing a phantom you've already disproved.
 
 **Retraction entry template:**
 
@@ -268,10 +195,10 @@ When a previously-claimed finding fails reproduction — **never silently drop i
 
 ## Related Skills & Chains
 
-- **`report-writing`** — When all 8 questions pass and the Pre-Severity Gate is clean. Workflow primitive: this skill is the gate that runs BEFORE `report-writing`; only findings that clear all 8Q + 4 pre-submission gates get the report-template handoff.
+- **`report-writing`** — When all 8 questions pass with evidence supporting the reported severity. Workflow primitive: this skill is the gate that runs BEFORE `report-writing`; only findings that clear the unified eight-question gate get the report-template handoff.
 - **`bugcrowd-reporting`** — When a Bugcrowd VRT mapping is needed for an accepted finding. Workflow primitive: after this skill validates the finding, `bugcrowd-reporting` decides the VRT category and severity-request paragraph.
 - **`evidence-hygiene`** — When the validated finding needs PoC evidence captured. Workflow primitive: this skill says "Q4 requires proof of impact"; `evidence-hygiene` provides the capture-and-redact protocol for that proof.
-- **`security-arsenal`** — When checking the always-rejected / conditionally-valid tables. Workflow primitive: this skill's "Never Submit List" and `security-arsenal`'s "Always Rejected" table are aligned; either entry-point lookup decides whether a primitive is reportable alone or only with a chain.
+- **`security-arsenal`** — When checking the user workflow and eight-question evidence. Workflow primitive: 技术示例可帮助回答八问，报告结论仅依照用户文件及统一八问。
 - **`bb-methodology`** — When Phase 5 (Validate & Report) starts. Workflow primitive: Phase 5's pre-report gate explicitly invokes `/validate` (this skill's 8Q gate) before any report is drafted.
 
 ---

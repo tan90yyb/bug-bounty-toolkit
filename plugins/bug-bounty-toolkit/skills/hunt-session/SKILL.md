@@ -6,7 +6,9 @@ metadata:
   report_count: 18
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+技术示例服从用户工作流：密码修改、退出/登出、破坏生产及批量提取不执行。登录与认证入口本身可测试；正常登录沿用审批豁免。需要真实数据时读取[去重计数规则](../bug-bounty/references/real-records.md)，同一漏洞最多 5 条不同真实记录，重复不计数；攻击链中违反边界的操作只记录未执行步骤，用测试数据或其他证据核对。
 
 ## Autonomous Testing Priority
 
@@ -89,7 +91,7 @@ Sec-Session-Registration: ...                   # DBSC in play → test downgrad
 
 ## Step-by-Step Hunting Methodology
 
-> **Two-session rule.** Every invalidation/fixation claim is proven with TWO concrete sessions captured by a real flow — attacker **A** and victim **B** — never with hardcoded placeholder strings. Helpers below capture real cookies from `curl`'s Netscape jar.
+> **两会话取证示例。** 可以通过账号 A/B 的实际会话比较失效或固定行为，也可选择能回答八问的其他证据方法。以下辅助命令从 curl cookie jar 读取会话。
 
 ```bash
 TARGET=target.com
@@ -187,7 +189,7 @@ echo "AFTER pw-change: $AFTER"
 - Finding is confirmed only if `AFTER` returns 200 **and** the body still carries the account's unique data (body-diff vs `BEFORE`). A bare 200 on a public/SPA route is not proof.
 - Run the **garbage-cookie negative control** again to prove the endpoint is session-gated.
 - Repeat the identical flow for **email-change** (`/settings/email`) and for **logout-all-devices** — apps frequently invalidate the *acting* session (B) but not *sibling* sessions (A). That sibling-survival is the exact persistent-ATO primitive `hunt-ato` chains.
-- **Severity gate:** if the change-password endpoint also lacks a current-password / MFA step-up (per `hunt-mfa-bypass`), A can pivot from read-only to full takeover → escalate.
+- **Severity evidence (Q4/Q8):** if the change-password endpoint also lacks a current-password / MFA step-up (per `hunt-mfa-bypass`), A can pivot from read-only to full takeover → escalate.
 
 ### Phase 4 — Cookie Attribute Analysis
 ```bash

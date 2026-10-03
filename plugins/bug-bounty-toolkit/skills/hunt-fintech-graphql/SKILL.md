@@ -6,7 +6,7 @@ metadata:
   report_count: 0
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## Why Fintech GraphQL Is a Different Risk Class
 
@@ -210,22 +210,9 @@ schema that accepts them anyway is mass assignment onto ledger state.
 
 ---
 
-## Gate 0 Validation
+## 报告验证
 
-Money-movement findings need a stricter bar than a typical GraphQL IDOR — "the query returns
-someone else's balance" is real impact; "I sent a malformed amount and got a 400" is not.
-
-1. **Did an actual ledger write occur, and can you show it?** Query the account balance before
-   and after — a state change (not just a `200`/success response body) is the proof.
-2. **Is the win deterministic, not a timing fluke?** For race/double-spend findings, reproduce
-   twice from a clean state. If it only works under specific load conditions, document the window
-   honestly rather than claiming guaranteed exploitability.
-3. **Does the finding move value the attacker didn't have, or reveal data they shouldn't see** —
-   not just "the mutation accepted an unexpected input type and the API returned an error
-   message." A verbose GraphQL error leaking a stack trace on a malformed `Money` scalar is a
-   `hunt-source-leak`-class finding, not a fintech-logic one — don't conflate the two in a report.
-
----
+正式报告仅使用[统一八问](../triage-validation/references/eight-question-gate.md)。技术核对用于提供八问证据，不另设通过门槛。复现依赖真实业务条件，不设五分钟或十分钟硬门槛；因时间未完成时登记[待续测线索表](../bug-bounty/references/time-deferred-findings.md)。
 
 ## Related Skills & Chains
 
@@ -242,7 +229,6 @@ someone else's balance" is real impact; "I sent a malformed amount and got a 400
 - **`hunt-idor`** — the source-account-vs-destination-account asymmetric authz pattern (step 5) is
   a fintech-specific instance of the general IDOR-on-mutation-argument class.
 - **`evidence-hygiene`** — balance screenshots and ledger-entry PoCs need the same cookie/PII
-  redaction discipline as any other capture, plus care that a real account number/balance from a
-  live financial account is never included verbatim.
-- **`triage-validation`** — apply Gate 0 above before drafting; a fintech program's triage team
-  will kill anything without a demonstrated ledger state change immediately.
+  optional redaction methods as any other capture; exact evidence handling follows the user file.
+- **`triage-validation`** — apply the unified eight-question gate before drafting; a fintech program's triage team
+  evidence should describe the actual observed consequence; no independent ledger-state gate is added.

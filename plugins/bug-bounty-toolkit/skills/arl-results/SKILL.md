@@ -5,11 +5,11 @@ description: Read completed ARL Lighthouse tasks and asset results from an exist
 
 # Read ARL results
 
-Read `../../CODE_OF_CONDUCT.md` before using ARL results for security testing.
 
-Run `scripts/arl_read.py` from the local Windows machine that can reach ARL. The script reads ARL's own API; it never starts a scan or sends requests to discovered hosts. On the first successful login it saves the username and password as a generic credential in that user's Windows Credential Manager, scoped to the ARL host and port. Later runs use the saved login automatically; the ARL session token stays in memory. The operator can run `forget` to remove the saved credential or use `--no-remember` for a one-off login. Do not ask the operator to paste a password, cookie, or token into chat or a repository file.
 
-For the operator's self-signed ARL certificate, pass the server certificate PEM with `--server-cert`. Keep that certificate outside this plugin. Do not disable TLS verification.
+Run `scripts/arl_read.py` from the local Windows machine that can reach ARL. The script reads ARL's own API; it never starts a scan or sends requests to discovered hosts. On the first successful login it saves the username and password as a generic credential in that user's Windows Credential Manager, scoped to the ARL host and port. Later runs use the saved login automatically; the ARL session token stays in memory. The operator can run `forget` to remove the saved credential or use `--no-remember` for a one-off login. 凭据可通过现有本地提示和 Windows 凭据管理器配置。
+
+For the operator's self-signed ARL certificate, pass the server certificate PEM with `--server-cert`. Keep that certificate outside this plugin. 现有连接脚本使用证书校验；自签名证书使用 --server-cert 参数。
 
 ```
 python scripts/arl_read.py --base-url https://192.168.1.128:5003 --server-cert PATH_TO_ARL_CERT health
@@ -20,7 +20,7 @@ python scripts/arl_read.py --base-url https://192.168.1.128:5003 status
 python scripts/arl_read.py --base-url https://192.168.1.128:5003 forget
 ```
 
-`health` checks API availability without login. `doctor`, `tasks`, and `assets` prompt locally only when no credential is saved. `assets` supports `domain`, `site`, and `ip`; use `--page` and `--size` for pagination. Outputs can contain target data: use them only in an approved assessment workspace, avoid committing them, and redact them before sharing.
+`health` checks API availability without login. `doctor`, `tasks`, and `assets` prompt locally only when no credential is saved. `assets` supports `domain`, `site`, and `ip`; use `--page` and `--size` for pagination. Outputs can contain target data: 按用户文件保存证据；需要时可脱敏再分享。
 
 Treat ARL's asset claims as leads. For this operator's company-based scope, a candidate domain enters the testing range when its ICP filing registrant belongs to the user-named target company. Record the filing evidence. Put domains registered to another company or with unconfirmed ownership on the pending list; do not test them automatically. ARL collection alone does not prove a host is online, and this skill does not probe discovered hosts.
 

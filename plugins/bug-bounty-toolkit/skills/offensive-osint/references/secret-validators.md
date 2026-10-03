@@ -4,7 +4,7 @@
 
 ## 23. Read-Only Secret Validators
 
-Use these to confirm a discovered credential is live. **Read-only, never destructive.** Tag every validation with `detectability` and `checked_at` (UTC).
+Use these to confirm a discovered credential is live. 以下是读取类验证方法；其他操作按用户文件的方法审批和生产红线执行。 Tag every validation with `detectability` and `checked_at` (UTC).
 
 ### 23.1 Postman API Key (PMAK-*)
 
@@ -34,7 +34,7 @@ ident = sts.get_caller_identity()
 ```
 - Valid → returns Account ID + ARN + UserId.
 - Invalid → `InvalidClientTokenId` or `SignatureDoesNotMatch`.
-- ARN scope: `:user/` is IAM user (broad), `:assumed-role/` is temp role (narrow), `:root` is account root (do NOT validate root keys you find).
+- ARN scope: `:user/` is IAM user (broad), `:assumed-role/` is temp role (narrow), `:root` is account root (validation follows the same user workflow).
 - Detectability: **medium** (CloudTrail logs `GetCallerIdentity` in account `<found>`).
 
 ### 23.3 GitHub PAT
@@ -133,10 +133,10 @@ Headers:
 }
 ```
 
-### 23.11 Hard rules
+### 23.11 用户工作流与取证参考
 
 - Read-only endpoint only.
-- Never use the validated credential to create, modify, delete, or send anything.
+- 凭据验证与后续操作均按用户方法审批、数据上限和生产红线执行；DELETE 只构造不发送。
 - Tag every validation with detectability.
 - Record `checked_at` (UTC).
 - If RoE forbids validation → `validation_skipped_by_policy`, stop, document.
@@ -167,7 +167,7 @@ aws iam simulate-principal-policy \
                  secretsmanager:ListSecrets ssm:DescribeParameters \
                  lambda:ListFunctions rds:DescribeDBInstances
 
-# Read-only enumeration of common services (do not WRITE)
+# Read-only enumeration of common services (writes follow operator approval)
 aws s3 ls
 aws ec2 describe-instances --output table --query 'Reservations[*].Instances[*].[InstanceId,State.Name,Tags[?Key==`Name`].Value]'
 aws secretsmanager list-secrets --query 'SecretList[*].Name'
@@ -226,7 +226,7 @@ curl -sk -m 10 -H "$H" -X POST "https://slack.com/api/team.info" | jq .
 # User list (only if scope includes users:read)
 curl -sk -m 10 -H "$H" -X POST "https://slack.com/api/users.list?limit=100" | jq '.members[] | {name, real_name, is_admin}'
 
-# DO NOT: chat.postMessage, files.upload, conversations.invite, etc.
+# Other operations (chat.postMessage, files.upload, conversations.invite) follow user method approval.
 ```
 
 **JWT — full triage workflow:**
@@ -299,7 +299,7 @@ curl -sk -m 10 -H "$H" -H "$A" https://api.anthropic.com/v1/models | jq '.data[]
 # Usage / quota (admin-scoped tokens only):
 curl -sk -m 10 -H "$H" -H "$A" https://api.anthropic.com/v1/organizations/usage_report | jq .
 
-# DO NOT: send actual completion requests against organization budget
+# Completion requests follow user approval and production-impact rules.
 ```
 
 **OpenAI API key — usage enum:**

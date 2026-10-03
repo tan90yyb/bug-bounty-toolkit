@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -20,7 +20,7 @@ The two failure modes this skill prevents:
 1. **Wasting the engagement** testing/triaging assets that aren't the target's.
 2. **Attacking an innocent third party** that merely shares the name — out of scope, and real harm.
 
-**Rule: ownership is guilty-until-proven. An asset is the target's only when a concrete ownership signal ties it to the target — never because a scanner's keyword matched.**
+**资产范围：** 按用户文件，公司ICP备案符合规则即纳入范围；其他公司或未知归属待确认。以下技术信号帮助排查同名与共享基础设施，不额外提高纳入门槛。
 
 For this operator's domain-led workflow, an ICP filing registrant belonging to
 the user-named target company is sufficient to add that domain to the current
@@ -60,7 +60,7 @@ Real exposures have a content-type + signature that differs from the catch-all (
 ## The triage workflow
 
 1. **Confirm the canonical owned-domain set first** (the SOW/program domain + its verified subdomains + the verified Entra/Okta/Google tenant brand name). This is your ownership anchor.
-2. **For each asset class, apply the verify-by column above.** No signal → quarantine, don't test.
+2. 备案归属按用户规则确定范围；verify-by 列为可选的质量核对方法。
 3. **Re-baseline the severity counts** against only-owned assets. Report the *delta* — "N Criticals → M after ownership + soft-404 triage" is itself a finding about the ASM program.
 4. **Quarantine collisions explicitly** (a `loot/quarantined_<source>.txt`) so it's auditable that you saw them and chose not to target them.
 5. **Surface the meta-finding:** if the supplied ASM/recon feed is mostly false-positive, that misallocates the owner's remediation budget and buries real risk — write it up (Medium/Strategic).

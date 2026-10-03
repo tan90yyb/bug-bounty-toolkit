@@ -6,7 +6,7 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 ## When to use this skill
 
@@ -17,7 +17,7 @@ Trigger when recon surfaces:
 - TCP 8443 / 4443 / 10443 / 8888 (common VPN web-mgmt ports)
 - HTTP responses with `Set-Cookie: webvpn=` (Cisco) / `SVPNCOOKIE=` (Fortinet) / `NSC_AAA=` (Citrix) / `DSAuthSession=` (Pulse) / `BIGipServer*` (F5)
 
-DO NOT use for:
+其他任务可参考对应技能：
 - Internal lateral-movement post-foothold (out of scope per user's boundary)
 - VPN client-side bugs (different attack class)
 - IPsec / L2TP / OpenVPN (different protocols, not SSL VPN web stack)
@@ -326,7 +326,7 @@ Add `-as` (auto-scan) for broader vuln coverage but slower.
 - **Banner-stripped servers (no version disclosure)** are good defense-in-depth — record as positive finding even if no CVE found
 - **Rate-limit yourself** — these appliances often log every request to a SIEM. Patient pace, jittered timing.
 - **SAML metadata is anonymous** — pull it. It's intel about AAA backend.
-- **Don't run pre-auth-RCE PoCs in red team without explicit OK** — accidentally bricking a VPN concentrator = catastrophic for the client. Detection-only tests first, then escalate with permission.
+
 - **Document the AAA backend identification** — knowing whether ASA uses RADIUS-to-local vs SAML-to-Entra changes downstream attack paths.
 
 ---

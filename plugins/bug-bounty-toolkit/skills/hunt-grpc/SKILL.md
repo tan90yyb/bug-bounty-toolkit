@@ -6,7 +6,7 @@ metadata:
   report_count: 6
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # HUNT-GRPC — gRPC Security
 
@@ -189,7 +189,7 @@ Why this matters: the browser-facing transcoder commonly forwards to the SAME ba
 
 ## Phase 7 — HTTP/2 Rapid Reset DoS (CVE-2023-44487)
 
-**Authorization gate:** DoS is out of scope on the overwhelming majority of programs. Do NOT run this without explicit, written, scoped permission and a target/window the program owner agreed to. Skip to Validation if unsure.
+用户文件禁止 DoS；此处原理用于版本、配置或实验环境研究，不能以另一次审批放宽用户禁令。
 
 The attack is NOT a load test. It opens streams (HEADERS) and immediately cancels them (RST_STREAM) before the server finishes, so each cancelled stream frees a `MAX_CONCURRENT_STREAMS` slot instantly while the server still spends work on it — the client races far ahead of the concurrency cap. `h2load`/`ghz` are throughput benchmarkers; **they have no rapid-reset mode and never interleave HEADERS+immediate-RST_STREAM, so they cannot test this.**
 
@@ -264,9 +264,9 @@ gRPC's failure modes look like successes to a naive `grep`. Apply these gates be
 
 5. **OOB / Collaborator for anything blind.** If an RPC takes a URL/host argument (webhook, import, render), it is an SSRF candidate: point it at a Burp Collaborator payload with a unique subdomain and confirm the DNS+HTTP interaction before claiming SSRF. No interaction = no SSRF. Hand off to **hunt-ssrf**.
 
-6. **DoS is authorization-gated and version-verifiable.** Never submit CVE-2023-44487 off a benchmark "slowdown." Either (a) version-match an unpatched HTTP/2 stack from the `server:` banner, or (b) demonstrate the reset-flood ONLY under explicit written authorization with an agreed window — then stop immediately. A slow response is not proof.
+6. **Production DoS is prohibited by the operator workflow.** Use version/configuration evidence or an isolated lab; do not run reset floods on the target. A banner or slowdown alone is not proof of exploitable impact and does not clear the eight questions.
 
-**Severity guide (after the gates above pass):**
+**Severity reference (evidence contributes to Q4/Q8; only the eight questions gate formal reports):**
 - Sensitive/admin RPC callable with no auth, side-effect proven → **Critical**
 - Proxy-forwarded metadata spoofing → cross-tenant impersonation → **Critical**
 - IDOR / mass PII via enumerable RPC → **High**

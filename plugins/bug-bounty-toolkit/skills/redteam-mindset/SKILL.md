@@ -6,7 +6,11 @@ metadata:
   report_count: 1
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
+
+## 共同执行规则
+
+以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
 ## When to use this skill
 
@@ -18,7 +22,7 @@ Trigger when:
 - You're about to spend time on IDOR/CSRF/XSS instead of access-yielding bugs
 - You found a vuln on app A and there are sister apps B, C, D you haven't touched
 
-DO NOT use for:
+其他任务可参考对应技能：
 - Bug bounty programs (use bug-bounty skill — different scope rules)
 - WAPT/PCI-style assessments (use OWASP-aligned skills)
 - Pure compliance audits
@@ -33,19 +37,19 @@ These produce DIFFERENT decisions at every blocker. Internalize the difference b
 
 ---
 
-## DO NOT STOP — primary directive (read this twice)
+## 在用户范围和时间内持续研究
 
-The 9 corrections below are nuance. THIS is the core. If you only retain one thing from this skill, retain this.
+下列研究建议服从用户文件、明确授权、业务红线和时间预算；它们不扩大范围或绕过停止条件。
 
 ### 范围、研究预算和行为准则持续适用
 
 读取[共同价值与时间规则](../bug-bounty/references/value-and-time.md)。有必要深挖且时间不足时主动在聊天中申请加时；完整覆盖要求不能绕过已批准的时间盒。
 
-Do not repeatedly re-confirm ordinary, non-disruptive probes that are already inside the written scope. However, initial authorization never permits conduct prohibited by `../../CODE_OF_CONDUCT.md`: malware or web-shell deployment, reading beyond the shared five-record validation allowance, business-impacting tests, or private retention of findings and target data. Those boundaries remain in force for the entire engagement and override any "go deep" or "do not stop" instruction.
+执行范围、方法审批、数据计数、业务红线与时间要求使用用户文件，不再添加独立禁令。
 
 ### Discipline rules are about correctness of FINDINGS, not throttling of EFFORT.
 
-Read this twice. The bundle's discipline rules — OOB-Or-It-Didn't-Happen, Marker Discipline, Body-Diff, Pre-Severity Gate, Server-Policy-vs-State, Statistical Sampling — all answer one question: *"is this signal actually a finding?"*. Continue only with safe, non-disruptive probes inside scope. Stop the affected test when the conduct policy, a scope limit, a stop condition, service instability, or the user requires it.
+Read this twice. The bundle's discipline rules — OOB evidence example, Marker Discipline, Body-Diff, eight-question evidence checks, Server-Policy-vs-State, Statistical Sampling — all answer one question: *"is this signal actually a finding?"*. Continue only with safe, non-disruptive probes inside scope. Stop the affected test when the conduct policy, a scope limit, a stop condition, service instability, or the user requires it.
 
 ### "Stop at PoC" means stop ESCALATING, not stop TESTING.
 
@@ -53,9 +57,9 @@ When you confirm impact on bug class X, don't keep escalating class X (no need t
 
 ### 真实信息最小验证：同一漏洞累计最多 5 条
 
-所有取证统一遵循[行为准则](../../CODE_OF_CONDUCT.md)。优先测试账号、自有数据和合成标记；为证明同一漏洞确有必要时，允许在授权范围内累计最多获取 5 条真实信息。取得足够证据后停止读取，不为凑满数量继续访问。
+所有取证统一遵循[行为准则](../../CODE_OF_CONDUCT.md)。优先测试账号、自有数据和合成标记；为证明同一漏洞确有必要时，允许在授权范围内累计最多获取 5 条不同真实信息。取得足够证据后停止读取，不为凑满数量继续访问。
 
-跨接口、账号、工具和重试共用同一上限，重复返回也计入获取条次。记录 finding_id、累计数量与证据位置；禁止批量枚举、导出和以密码、密钥、令牌作为读取样本。意外返回的记录计入上限；出现超量返回时停止该读取路径并如实记录，不继续扩展。
+跨接口、账号、工具和重试共用同一上限，按不同真实记录去重计数，重复数据不增加计数。记录 finding_id、累计数量与证据位置；不批量提取敏感数据。意外返回的记录计入上限；出现超量返回时停止该读取路径并如实记录，不继续扩展。
 
 请求、响应和截图允许脱敏，保留验证权限关系、字段结构及结果差异所需的信息。未证明影响的线索按价值与时间规则继续研究；需要加时就在聊天中申请，用户批准后继续。
 
@@ -70,13 +74,13 @@ When you confirm impact on bug class X, don't keep escalating class X (no need t
 > "The original 3-sample baseline (σ = 32 ms) with three distinct SLEEP payloads each adding +6 s is statistically definitive. The recheck failure is data — investigate the *delta*, not retract the finding."
 
 When a defense suddenly appears mid-engagement:
-1. **Original PoC artifacts are forever** — capture them BEFORE recheck. Screenshots, request/response pairs, timing samples.
+1. **原始证据可用于对照，保存要求按用户文件执行** — capture them BEFORE recheck. Screenshots, request/response pairs, timing samples.
 2. **Diff the response** — body size, headers, cookies, response time. The change tells you what the client deployed (WAF rule? Hotfix? Geo block?).
 3. **The deployed mitigation is itself a finding** — positive operational observation about IR responsiveness.
 4. **Try alternative vectors** — slower-paced timing, encoded keywords, different injection contexts, cookie injection, header injection.
 5. **Document both states** — "vulnerable at T0, mitigated at T0+30min, mitigation likely at WAF (bypassable)".
 
-**Rule:** never retract a finding on first reproducibility failure. Investigate why before declaring false positive.
+复现失败可分析原因和反证；结论由统一八问决定，不强制保留已证伪发现。
 
 ---
 
@@ -99,35 +103,9 @@ The authorized-engagement case: SQLi confirmed on one sub-app (`<app-A>`); four 
 
 ---
 
-## Mindset correction #3 — WAPT vs Red Team scope discipline
+## 按用户价值分级选择方向
 
-**Skip these in red team scope (they don't yield access):**
-- IDOR (cross-user read/write *without* an ATO / privilege-escalation / sensitive-data-exfil chain — WAPT class). NOTE: IDOR is NOT a blanket-skip. IDOR on admin/role-assignment endpoints yields privilege escalation; on password-reset or session objects yields ATO; on file-download or PII handlers yields exfil; on token/key endpoints yields credential capture. Pursue those per the decision rule below.
-- CSRF (state-change-via-tricked-user — WAPT class)
-- Reflected XSS (without account-takeover chain — WAPT class)
-- Missing security headers (WAPT class)
-- Cookie hardening flags (WAPT class)
-- Verbose error messages without sensitive data (WAPT class)
-- DoS (out of scope per engagement rules typically)
-- Username enumeration (intel-gathering, not access)
-
-**Pursue these (they DO yield access):**
-- SQL injection (data exfil → DB creds → lateral)
-- Command injection / RCE (foothold)
-- File upload → webshell (foothold)
-- LFI/RFI (config reads → DB creds → access)
-- SSRF (cloud metadata → IAM → cloud access)
-- Authentication bypass (parameter manipulation, JWT alg=none, header injection)
-- Hardcoded credentials in mobile/JS bundles
-- Default credentials on admin panels
-- SAML XSW / signature stripping (session hijack)
-- Cisco ASA / Citrix / Pulse / Fortinet SSL VPN CVEs (network foothold)
-- ManageEngine / Confluence / Atlassian RCE CVEs (foothold)
-- Kerberoasting / AS-REP roasting (post-foothold, but enumerate from outside if possible)
-
-**Decision rule:** if the bug, exploited fully, doesn't lead to a session/token/foothold or sensitive data exfil, it's WAPT-class — note it briefly but don't burn time on it.
-
----
+站点分类、漏洞价值与时间使用用户文件的 Tier 0–3。认证、越权、业务逻辑、注入等均按当前线索选择，不因红队/WAPT标签自动跳过某类漏洞。
 
 ## Mindset correction #4 — Aggressive default, not conservative default
 
@@ -135,7 +113,7 @@ The authorized-engagement case: SQLi confirmed on one sub-app (`<app-A>`); four 
 > "Tested 30% of the websites and called it comprehensive."
 
 **The correct frame:**
-> "Until I've actively probed every login form, every API endpoint, every parameter, every CVE-matched version, the engagement is not done."
+> 按站点队列和本轮预算覆盖允许的业务入口，未执行项写明原因和下一步。
 
 Aggressive defaults:
 1. **Probe every live host** for top 20 paths (admin, api, login, /.git, /.env, server-status, swagger, openapi.json, robots.txt, /actuator, /healthz, etc.)
@@ -145,7 +123,7 @@ Aggressive defaults:
 5. **For every mobile app**, decompile + grep for secrets + check pinned certs + identify exported components
 6. **For every "out of scope" SaaS** that's on a corp subdomain, confirm with client — vendor-managed doesn't mean immune (CVE-2022-47966 went unpatched on many on-prem ME-SDP installs)
 
-**Rule:** if you haven't actively probed *every* live surface (not just a sampled fraction), you haven't done red team yet — you've done recon.
+**Rule:** report actual coverage and deferred entries. The queue and agreed budget determine completion; do not pretend that unresolved surfaces were tested.
 
 ---
 
@@ -210,7 +188,7 @@ This is its own skill: see `mid-engagement-ir-detection`.
 
 ## Mindset correction #7 — Multi-technique cross-validation
 
-For every "vulnerable" finding, prove via 2+ techniques:
+以下为可选交叉验证方法，按八问缺口选择，不要求固定两种技术：
 
 | Vuln class | Primary | Cross-check |
 |---|---|---|
@@ -265,8 +243,8 @@ Before starting a red team engagement, confirm:
 - [ ] SOW + EL/RoE referenced
 - [ ] Test IPs allocated and logged (IP_LOGS table or equivalent)
 - [ ] State file initialized (`engagement_log/` with attempt counter, results JSONL, IP log)
-- [ ] Hard-cap for cred attacks decided (1 or 2 per user lifetime)
-- [ ] Kill-switch thresholds set (max LOCKED in run, max errors in window)
+- [ ] 请求、生产影响和数据读取按用户文件检查
+- [ ] 记录实际锁定与错误现象，按用户规则决定下一步
 - [ ] Crown-jewel target identified (what does winning look like?)
 - [ ] Critical-finding-discuss protocol agreed (when to pause and notify)
 - [ ] Burp proxy as default for evidence capture
@@ -276,7 +254,7 @@ Before starting a red team engagement, confirm:
 
 ## During-engagement checklist
 
-Every 30 minutes ask:
+At the shared 20-minute no-progress review or deep-work deadline, ask:
 
 - [ ] Am I making progress, or stuck?
 - [ ] Have I logged the last test result to the engagement journal?
@@ -292,7 +270,7 @@ Every 30 minutes ask:
 Before declaring done:
 
 - [ ] All findings have at least 2 cross-technique confirmations
-- [ ] Each finding's PoC is reproducible in <5 minutes by another tester
+- [ ] Each formal finding passes the eight questions; reproduction records its actual prerequisites and waiting time
 - [ ] Original PoC artifacts (screenshots, request/response, timing samples) preserved
 - [ ] Mid-engagement IR observations documented as findings (positive ops)
 - [ ] Active-attacker observations documented (lockout differentials, etc.)
@@ -312,35 +290,13 @@ If you catch yourself thinking any of these, STOP and reconsider:
 - "OCR isn't reliable, can't bypass captcha" (paid service is $5; we're not on a personal-research budget)
 - "Mobile app is years old, probably nothing useful" (hardcoded URLs and tokens often outlive the engineering team's memory)
 - "SaaS, so nothing to test" (vendor patches centrally — usually true, but tenant config gaps are NOT central)
-- "We've tested enough" (use the during-engagement checklist; if any answer is "no", keep going)
-- "The exfil would take too long" (run it unattended; deliver partials)
+- 未完成的检查写入覆盖记录；时间不足的具体候选写入待续测表。
 
 ---
 
-## When to stop (the legitimate stop conditions)
+## 停止、暂停与收束
 
-Only stop when:
-- All in-scope assets have been actively probed (not just discovered) for top vuln classes — see "Real-engagement cadence" checklist near top of this skill
-- Every confirmed vuln has been validated via 2+ techniques
-- Every confirmed vuln has been swept on its sister apps
-- Every blocker has been attempted via 2+ alternative vectors
-- Engagement window has expired AND deliverables are documented
-- Client has explicitly directed you to stop
-
-NOT legitimate stop conditions (each of these has produced a real failure):
-- "I'm tired of this target"
-- "The first attempt didn't work"
-- "Defenses are working" — defences working on class X says nothing about classes Y, Z
-- "I documented it" — documenting a gap is not running the test
-- "We've already informed the client"
-- "Volume is getting high" — for an authorized engagement, the only volume question is whether each request is well-tagged and audited
-- "The discipline rules say be careful" — they say be correct, not be quiet
-- "The skill for this tech stack doesn't exist yet" — apply the vendor's public check matrix manually; log v1.1 gap separately
-- "User chose Option X and I'm not sure if X covers Y" — if X was a full-engagement mode, Y is in scope unless the user said otherwise
-- "Tool isn't installed" — `brew install`, `apt install`, direct-download → most engagement tools install in under 5 minutes
-- "I'll defer to operator" — the operator authorized you to do the work. Doing the work IS the deferral they want.
-
----
+按用户文件执行：用户要求停止、资产不在范围、方法未批准、发生业务影响、达到真实记录额度时停止相关操作。已有足够证据时停止新增记录读取，保留允许的根因与影响面分析。深挖预算到期暂停该方向，按规则申请加时或写入待续测表；结束后由用户决定恢复哪些候选。不能以完整覆盖、阻碍尚未解决或“需要两种方法”强制绕过这些条件。已证伪的方向记录反证后调整；时间不足本身不证明不存在漏洞。
 
 ## Bridge to neighboring skills
 

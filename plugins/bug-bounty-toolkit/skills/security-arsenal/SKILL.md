@@ -5,7 +5,7 @@ metadata:
   sources: community, public_research
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # SECURITY ARSENAL
 
@@ -736,42 +736,13 @@ gf cors         # CORS-related parameters
 
 ---
 
-## ALWAYS REJECTED — NEVER SUBMIT
+## 报告判断依据
 
-Submitting these destroys your validity ratio. N/A hurts. Don't.
+依照用户文件的现象/结果区分和统一八问判断。没有已证明影响的发现保留为笔记；不增加按漏洞名称一律拒绝的清单。
 
-```
-Missing CSP / HSTS / X-Frame-Options / other security headers
-Missing SPF / DKIM / DMARC
-GraphQL introspection alone (no auth bypass, no IDOR)
-Banner / version disclosure without a working CVE exploit
-Clickjacking on non-sensitive pages (no sensitive action in PoC)
-Tabnabbing
-CSV injection (no actual code execution shown)
-CORS wildcard (*) without credential exfil PoC
-Logout CSRF
-Self-XSS (only exploits own account)
-Open redirect alone (no ATO chain, no OAuth code theft)
-OAuth client_secret in mobile app (disclosed, expected)
-SSRF with DNS callback only (no internal service access)
-Host header injection alone (no password reset poisoning PoC)
-Rate limit on non-critical forms (login page Cloudflare, search, contact)
-Session not invalidated on logout
-Concurrent sessions allowed
-Internal IP address in error message
-Mixed content (HTTP resources on HTTPS page)
-SSL weak cipher suites
-Missing HttpOnly / Secure cookie flags alone
-Broken external links
-Pre-account takeover (usually — requires very specific conditions)
-Autocomplete on password fields
-```
+## 攻击链示例（供八问取证参考）
 
----
-
-## CONDITIONALLY VALID — REQUIRES CHAIN
-
-These are valid ONLY when combined with a chain that proves real impact:
+下面列出可能的业务影响路径；以实际证据回答八问，示例不是唯一允许的路径。
 
 | Standalone Finding | Chain Required | Result if Chained |
 |---|---|---|
@@ -846,9 +817,9 @@ sensitive.txt      # Sensitive paths (.env, config.json, backup, etc.)
 ## Related Skills & Chains
 
 - **`hunt-xss`** / **`hunt-ssrf`** / **`hunt-sqli`** / **`hunt-ssti`** / **`hunt-idor`** — When a hunter is actively testing a parameter and needs payloads. Workflow primitive: this skill is the payload library those hunt-* skills reach for; the hunt-* skill identifies the sink, this skill provides the syntax.
-- **`triage-validation`** — When deciding if a finding is reportable at all. Workflow primitive: the "Always Rejected" and "Conditionally Valid — Requires Chain" tables in both skills must agree; `triage-validation` runs the 8-Question Gate, this skill provides the chain-required mapping used by Q8.
+- **`triage-validation`** — When deciding if a finding is reportable at all. Workflow primitive: the user workflow and eight-question evidence in both skills support the shared eight questions; chain examples are optional evidence paths.
 - **`web2-recon`** — When the URL set has been classified by `gf` patterns. Workflow primitive: `gf xss/ssrf/sqli` outputs from recon → look up the corresponding payload section here; `gf` pattern names index directly into this skill's payload sections.
-- **`evidence-hygiene`** — When a payload produces output worth screenshotting. Workflow primitive: after a payload demonstrates impact (cookie theft, data exfil), hand off to `evidence-hygiene` for redaction before the screenshot becomes evidence.
+- **`evidence-hygiene`** — When a payload produces output worth screenshotting. Workflow primitive: after a payload demonstrates impact (cookie theft, data exfil), hand off to `evidence-hygiene` for optional redaction when preparing evidence.
 - **`bb-methodology`** — When Phase 3 (Discovery) routes by input type. Workflow primitive: Phase 3's decision flow ("ID param → IDOR checklist", "URL input → SSRF checklist") names which section of this arsenal to load.
 
 ---
@@ -879,11 +850,11 @@ When multiple bypass payloads exist for the same WAF, the order to try is:
 
 Most engagements end at step 2 — modern WAFs trip on the parser-quirk class because the WAF and the origin app disagree on what's a "valid" request.
 
-### OOB-Or-It-Didn't-Happen Gate applies everywhere
+### OOB evidence check (supports Q3–Q5) applies everywhere
 
-Every blind primitive (blind SQLi, blind XSS, blind SSRF, blind RCE, blind XXE) needs OOB confirmation. Without it, you can't tell the bug from a parser-error log. Phase 2D's hardened lab proved the gate kills FPs that look identical to real bugs at the surface — error messages with `you have an error in your SQL syntax` text in a 500 page can be parser logs from a different request entirely, hit a Burp Collaborator domain (or interactsh) and confirm callback before filing.
+盲 SQLi/XSS/SSRF/RCE/XXE 可使用 OOB 回调，也可采用能回答八问的其他可重复、可归因结果。回调不是独立门槛。 Phase 2D's hardened lab proved the gate kills FPs that look identical to real bugs at the surface — error messages with `you have an error in your SQL syntax` text in a 500 page can be parser logs from a different request entirely, hit a Burp Collaborator domain (or interactsh) 并将实际证据用于八问判断。
 
-OOB callback infrastructure ranking by 2026: (1) Burp Collaborator (Pro license; cleanest), (2) interactsh-client (open source; comparable), (3) DNSLog.cn (free but logged by third party — never use for paid engagements), (4) self-hosted catch-all DNS + HTTP listener (most reliable for long-running engagements).
+OOB callback infrastructure ranking by 2026: (1) Burp Collaborator (Pro license; cleanest), (2) interactsh-client (open source; comparable), (3) DNSLog.cn (free; third-party logging is a tool-selection consideration), (4) self-hosted catch-all DNS + HTTP listener (most reliable for long-running engagements).
 
 ### Marker discipline
 

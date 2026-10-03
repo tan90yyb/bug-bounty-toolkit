@@ -5,7 +5,7 @@ metadata:
   sources: bugcrowd, community
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # BUGCROWD REPORTING — Program-Specific Tactics
 
@@ -114,7 +114,7 @@ The "P4 = No Rate Limiting on Login Form" default applies to ordinary login page
 
 - Open with *"Severity request — please review carefully before applying VRT default"* (literal phrase). Triagers recognize this and don't auto-close.
 - Use **bold** sparingly; one or two phrases per reason at most.
-- Never use "could potentially" or "may allow" — these are downgrade-bait.
+- 清晰区分已证明影响和待验证边界，采用用户证据标准。
 - Cite the program's own Focus Areas / accepted-impact list by exact name.
 - Cross-reference linked submissions by full submission ID (UUID format).
 
@@ -267,7 +267,7 @@ After submitting any report that includes session-cookie-derived evidence:
 
 ### 7.4 If the test account gets locked
 
-1. Don't create a second account to bypass the lock — that looks like fraud
+
 2. Email the program-specific contact (if provided) with your Bugcrowd username and the report ID
 3. Wait for the program team to unblock you; testing during the lock period damages credibility
 
@@ -290,9 +290,9 @@ Maintain a simple text file with each submission's UUID, severity, and one-line 
 
 ### 8.3 What to avoid
 
-- Don't file all findings in a single batch within minutes. Triagers see this as low-effort spam.
-- Don't file an OOS-risky finding before a clean P3 from the same engagement. The clean one establishes credibility; the risky one benefits from being read in that context.
-- Don't disclose any findings publicly until the program explicitly says it's OK. Bugcrowd's confidentiality applies to both unresolved AND resolved issues.
+
+
+
 
 ---
 
@@ -321,6 +321,6 @@ This skill is small and focused. It does NOT duplicate content from `report-writ
 
 - **`report-writing`** — Always load this skill alongside `bugcrowd-reporting`. Workflow primitive: `report-writing` provides the body skeleton; this skill layers VRT selection + severity-request paragraph + OOS-clause rebuttals on top of that skeleton.
 - **`triage-validation`** — When deciding if a Bugcrowd-bound finding will pass triage. Workflow primitive: 8Q gate runs first; only validated findings reach this skill for VRT mapping.
-- **`evidence-hygiene`** — When attaching screenshots / HARs to a Bugcrowd submission. Workflow primitive: Bugcrowd's private attachment system requires redacted evidence; route everything through `evidence-hygiene` before clicking attach.
+- **`evidence-hygiene`** — When attaching screenshots / HARs to a Bugcrowd submission. Workflow primitive: use evidence-hygiene when optional redaction or capture methods help reproduce the finding.
 - **`security-arsenal`** — When the PoC step needs payloads cited verbatim. Workflow primitive: the "Steps to Reproduce" section in this skill's report bodies pulls exact payloads from `security-arsenal` so the triager can paste-and-run.
 - **`bb-methodology`** — When confirming engagement mode is bug-bounty (not red-team). Workflow primitive: PART 0 of `bb-methodology` answers "bug bounty?"; if yes AND the target is Bugcrowd, this skill becomes the reporting overlay.

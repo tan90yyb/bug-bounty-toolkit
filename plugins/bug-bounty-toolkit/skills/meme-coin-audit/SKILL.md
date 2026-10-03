@@ -5,7 +5,7 @@ metadata:
   sources: public_research
 ---
 
-> **Mandatory testing conduct:** Before taking any action, read and follow [`../../CODE_OF_CONDUCT.md`](../../CODE_OF_CONDUCT.md). It overrides any conflicting payload, proof, persistence, exploitation, availability, or data-handling instruction in this skill.
+> **工作流依据：** 限制仅使用[用户文件及已确认修改](../../OPERATOR_POLICY.md)，汇总见[共同规则](../../CODE_OF_CONDUCT.md)。本技能的技术步骤和证据方法供按需选用，正式报告统一回答八问。
 
 # MEME COIN & TOKEN SECURITY AUDIT
 
@@ -13,27 +13,9 @@ Fast-kill rug pull detection and deep token security analysis for EVM and Solana
 
 ---
 
-## PRE-DIVE KILL SIGNALS
+## 风险观察参考
 
-Check these BEFORE reading a single line of code. If any are true, skip the audit — the token is likely a rug or not worth the time.
-
-### Hard Kills (Skip Immediately)
-- **Contract not verified** on Etherscan/Solscan → Cannot audit source = cannot trust
-- **Deployer wallet** has history of rug pulls (check Etherscan deployer page)
-- **Token age < 1 hour** AND no known team → Too early, wait for more data
-- **Mint authority retained** (Solana) AND no cap → Infinite mint = certain rug
-- **Freeze authority retained** (Solana) on meme coin → Honeypot confirmed
-- **Transfer hook present** (Token-2022) with mutable hook program → Honeypot vector
-- **Permanent delegate** extension (Token-2022) → Can steal all holder tokens
-
-### Soft Kills (Proceed with Extreme Caution)
-- Top holder > 20% of supply (excluding DEX pools)
-- LP not burned or locked in verified contract
-- Contract is upgradeable / proxy with retained admin
-- Less than $5K liquidity in the pool
-- No social presence / anonymous deployer with no history
-
----
+检查合约源码、部署者历史、铸币和冻结权限、转账钩子、代理升级、持仓和流动性。观察用于选择证据与研究方向，不自动停止审计；投入按用户价值与时间规则决定。
 
 ## THE ONE RULE
 
@@ -58,7 +40,7 @@ grep -rn "function mint\|_mint(\|_balances\[.*\] +=" src/ --include="*.sol" | gr
 grep -rn "MintTo\|mint_to\|mint_authority" src/ --include="*.rs" | grep -v "test\|target"
 ```
 
-**Kill if:** MAX_SUPPLY enforced in every mint path, or mint function removed entirely.
+**反证参考：** MAX_SUPPLY enforced in every mint path, or mint function removed entirely.
 
 ### 2. HONEYPOT / TRANSFER RESTRICTION
 > Common scam pattern. Buy works, sell blocked.
@@ -73,7 +55,7 @@ grep -rn "blacklist\|isBlacklisted\|_bots\|maxTxAmount\|approve.*override\|tradi
 grep -rn "freeze_authority\|transfer_hook\|TransferHook\|permanent_delegate" src/ --include="*.rs"
 ```
 
-**Kill if:** No blacklist mapping, no transfer hooks, no freeze authority.
+**反证参考：** No blacklist mapping, no transfer hooks, no freeze authority.
 
 ### 3. FEE MANIPULATION
 > Common rug pattern. Sell fee set to 99% after initial buys.
@@ -84,7 +66,7 @@ grep -rn "setFee\|setSellFee\|_taxFee\|_sellFee" src/ --include="*.sol"
 grep -rn "function set.*Fee" -A5 src/ --include="*.sol" | grep -v "require\|MAX\|<="
 ```
 
-**Kill if:** Fee setter has `require(fee <= MAX_FEE)` with MAX_FEE <= 10%.
+**反证参考：** Fee setter has `require(fee <= MAX_FEE)` with MAX_FEE <= 10%.
 
 ### 4. LIQUIDITY POOL DRAIN
 > LP removal, migration, or manipulation to crash price.
@@ -94,7 +76,7 @@ grep -rn "function set.*Fee" -A5 src/ --include="*.sol" | grep -v "require\|MAX\
 grep -rn "migrateLP\|emergencyWithdraw\|\.sync()\|setPair\|setRouter" src/ --include="*.sol"
 ```
 
-**Kill if:** LP tokens burned to dead address, no migration function, no pair setter.
+**反证参考：** LP tokens burned to dead address, no migration function, no pair setter.
 
 ### 5. BONDING CURVE MANIPULATION
 > Exploits in pump.fun-style bonding curves.
@@ -104,7 +86,7 @@ grep -rn "migrateLP\|emergencyWithdraw\|\.sync()\|setPair\|setRouter" src/ --inc
 grep -rn "virtualReserve\|setCurve\|graduate\|bonding_curve" src/ --include="*.sol" --include="*.rs"
 ```
 
-**Kill if:** Curve parameters immutable, graduation permissionless.
+**反证参考：** Curve parameters immutable, graduation permissionless.
 
 ### 6. AUTHORITY RETENTION (SOLANA)
 > Retained mint/freeze/update authorities on Solana tokens.
@@ -115,7 +97,7 @@ grep -rn "mint_authority\|freeze_authority\|update_authority\|close_authority" s
 grep -rn "set_authority.*None" src/ --include="*.rs"  # Good sign: revocation
 ```
 
-**Kill if:** All authorities = None, verified on-chain.
+**反证参考：** All authorities = None, verified on-chain.
 
 ### 7. FAKE RENOUNCE / HIDDEN OWNERSHIP
 > Ownership appears renounced but backdoor control retained.
@@ -125,7 +107,7 @@ grep -rn "set_authority.*None" src/ --include="*.rs"  # Good sign: revocation
 grep -rn "renounceOwnership.*override\|_shadowAdmin\|_backupOwner\|selfdestruct" src/ --include="*.sol"
 ```
 
-**Kill if:** renounceOwnership NOT overridden, no second admin role, no selfdestruct.
+**反证参考：** renounceOwnership NOT overridden, no second admin role, no selfdestruct.
 
 ### 8. SANDWICH AMPLIFICATION BY DESIGN
 > Contract makes holders maximally sandwichable.
@@ -136,7 +118,7 @@ grep -rn "swapExactTokensForETH" -A5 src/ --include="*.sol" | grep "0,"
 grep -rn "swapThreshold\|_rebase\|mandatoryPool" src/ --include="*.sol"
 ```
 
-**Kill if:** Auto-swap has proper slippage, no rebase mechanics.
+**反证参考：** Auto-swap has proper slippage, no rebase mechanics.
 
 ---
 
