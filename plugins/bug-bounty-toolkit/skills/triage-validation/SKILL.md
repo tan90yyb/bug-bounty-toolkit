@@ -11,6 +11,11 @@ metadata:
 
 以[用户工作流](../../OPERATOR_POLICY.md)及本轮明确指令为准。取证读取[不同真实记录的 5 条计数规则](../bug-bounty/references/real-records.md)。登录与认证入口可以测试，正常登录不逐包审批；测试请求、改密与登出等操作遵循用户工作流。按共同时间规则继续有价值的方向，因时间暂停的候选登记[待续测表](../bug-bounty/references/time-deferred-findings.md)，任务结束时输出，由用户选择后续项目。
 
+
+## 研究仪表盘
+
+本地“渗透 / 漏洞 / 轨迹”视图使用 [research-dashboard](../research-dashboard/SKILL.md)。主工作流负责启动或恢复本项目仪表盘；记录本技能的加载、实际运行与结束状态，重要操作仍写入进度日志。资产、线索、证据关系和八问按实际结果更新；图谱展示不替代现有测试与报告规则。
+
 # TRIAGE & VALIDATION
 
 ## 统一八问（唯一问题定义）

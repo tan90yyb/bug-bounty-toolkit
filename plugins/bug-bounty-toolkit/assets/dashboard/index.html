@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bug Bounty Toolkit · 研究工作台</title><link rel="stylesheet" href="/style.css"></head>
+<body>
+<div class="shell">
+<aside class="rail"><a class="brand" href="/" aria-label="工作台首页"><span class="brand-mark">B</span></a><span class="rail-line"></span><span class="rail-item active" title="研究工作台">⌘</span><span class="rail-caption">LOCAL</span></aside>
+<div class="workspace">
+<header><div><p class="eyebrow">BUG BOUNTY TOOLKIT <span class="slash">/</span> 研究工作台</p><h1 id="project-title">正在读取记录…</h1><p id="project-description">资产、研究路径与执行进展</p></div><div class="header-actions"><span id="connection" class="connection">连接中</span><button id="refresh" class="button">刷新</button><a href="/api/export" class="button" download="toolkit-dashboard.json">导出记录 ↗</a></div></header>
+<div id="demo-banner" class="demo-banner" hidden>演示数据 · 所有资产、线索与操作均为虚构，仅用于界面验收。</div>
+<div id="warning" class="warning" role="status" hidden></div>
+<section class="metrics" aria-label="项目概况">
+<div><span>资产</span><strong id="metric-assets">—</strong><small>进入记录的独立资产</small></div>
+<div><span>研究线索</span><strong id="metric-leads">—</strong><small>尚待验证的方向</small></div>
+<div><span>已确认漏洞</span><strong id="metric-confirmed">—</strong><small>已记录八问通过</small></div>
+<div><span>待续测</span><strong id="metric-deferred">—</strong><small>保留证据与下一步</small></div>
+<div><span>执行中的技能</span><strong id="metric-running">—</strong><small>按实际执行记录统计</small></div>
+</section>
+<div class="navigation"><nav role="tablist" aria-label="工作台页面"><button id="tab-graph" class="tab active" role="tab" aria-selected="true" aria-controls="page-graph" data-page="graph">渗透 <span>探索图谱</span></button><button id="tab-findings" class="tab" role="tab" aria-selected="false" aria-controls="page-findings" data-page="findings">漏洞 <span id="finding-count">0</span></button><button id="tab-trace" class="tab" role="tab" aria-selected="false" aria-controls="page-trace" data-page="trace">轨迹 <span>技能与操作</span></button></nav><p class="updated" id="updated">尚无记录</p></div>
+<main>
+<section id="page-graph" class="page active" role="tabpanel" aria-labelledby="tab-graph">
+<div class="section-heading"><div><h2>让每一条线索，都有来路</h2><p>目标 → 资产 → 业务 → 研究方向 → 证据 → 漏洞</p></div><div class="filters"><select id="asset-filter" aria-label="筛选资产"><option value="">全部资产</option></select><input id="graph-search" type="search" placeholder="搜索节点或线索" aria-label="搜索图谱"></div></div>
+<div class="graph-layout"><div class="graph-panel"><div class="graph-toolbar"><div class="legend"><span><i class="goal"></i>目标</span><span><i class="asset"></i>资产</span><span><i class="business"></i>业务</span><span><i class="lead"></i>线索</span><span><i class="evidence"></i>证据</span><span><i class="finding"></i>漏洞</span></div><div class="zoom-controls"><button id="zoom-out" aria-label="缩小图谱">−</button><span id="zoom-label">100%</span><button id="zoom-in" aria-label="放大图谱">+</button><button id="zoom-fit">适配</button></div></div><div id="graph-viewport" class="graph-viewport"><svg id="graph" xmlns="http://www.w3.org/2000/svg" aria-label="研究路径图谱"></svg><div id="graph-empty" class="empty" hidden><strong>从第一个目标开始</strong><p>记录资产、业务和线索后，探索路径会出现在这里。</p></div></div><div class="graph-footer"><span id="graph-summary">0 个节点 · 0 条关系</span><span>点击节点查看详情 · 拖动空白处平移</span></div></div><aside id="node-detail" class="detail-panel"><p class="eyebrow">节点详情</p><h3>选择一条研究路径</h3><p class="muted">点击图中的节点，查看状态、证据和下一步。</p></aside></div>
+</section>
+<section id="page-findings" class="page" role="tabpanel" aria-labelledby="tab-findings" hidden>
+<div class="section-heading"><div><h2>把候选线索，与确认结果分开</h2><p>查看八问、业务影响与证据缺口，及时调整研究方向。</p></div><div class="filters"><select id="finding-status" aria-label="筛选漏洞状态"><option value="">全部状态</option><option value="candidate">候选线索</option><option value="validating">验证中</option><option value="confirmed">已确认</option><option value="refuted">已证伪</option><option value="deferred">待续测</option></select><input id="finding-search" type="search" placeholder="搜索漏洞、资产或编号" aria-label="搜索漏洞"></div></div>
+<div class="findings-layout"><div id="finding-list" class="finding-list"></div><aside id="finding-detail" class="detail-panel"><p class="eyebrow">漏洞详情</p><h3>选择一个候选或结果</h3><p class="muted">八问的答案、证据位置和下一步会在这里显示。</p></aside></div>
+<div class="deferred-section"><div class="section-heading"><div><h2>待续测记录</h2><p>因时间暂停的方向保留在这里，由你决定后续安排。</p></div><span id="deferred-count" class="pill">0 项</span></div><div class="table-wrap"><table><thead><tr><th>编号 / 线索</th><th>存在可能性</th><th>已用 / 预计续测</th><th>暂停原因</th><th>下一步 / 用户决定</th></tr></thead><tbody id="deferred-table"></tbody></table></div></div>
+</section>
+<section id="page-trace" class="page" role="tabpanel" aria-labelledby="tab-trace" hidden>
+<div class="section-heading"><div><h2>看清每个技能，实际走到了哪一步</h2><p>加载与执行分别记录，未记录的操作不会被推断为已完成。</p></div><div class="filters"><select id="skill-status" aria-label="筛选技能状态"><option value="">全部状态</option><option value="loaded">已加载</option><option value="running">执行中</option><option value="completed">已完成</option><option value="blocked">受阻</option><option value="failed">失败</option><option value="deferred">延期</option></select><input id="trace-search" type="search" placeholder="搜索技能或操作" aria-label="搜索轨迹"></div></div>
+<div id="skill-list" class="skill-grid"></div>
+<div class="timeline-heading"><h2>操作时间线</h2><span id="event-count" class="muted">0 条记录</span></div><div id="timeline" class="timeline"></div><button id="more-events" class="button" hidden>显示更多记录</button>
+</section>
+</main><footer class="footer"><span>本地研究记录 · 无第三方资源</span><span>页面每 3 秒检查更新，显示已写入的记录</span></footer>
+</div></div><script src="/app.js" defer></script></body></html>
